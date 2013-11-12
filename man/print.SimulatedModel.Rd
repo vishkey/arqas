@@ -1,0 +1,17 @@
+\name{print.SimulatedModel}
+\alias{print.SimulatedModel}
+\title{Print the main characteristics of a SimulatedModel object}
+\usage{
+  \method{print}{SimulatedModel} (x, ...)
+}
+\arguments{
+  \item{x}{SimulatedModel object}
+
+  \item{...}{Further arguments passed to or from other
+  methods.}
+}
+\description{
+  Print the main characteristics of a SimulatedModel object
+}
+\keyword{internal}
+

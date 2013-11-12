@@ -1,0 +1,18 @@
+\name{print.M_M_S_INF_H}
+\alias{print.M_M_S_INF_H}
+\title{Print the main characteristics of a M/M/S/\eqn{\infty}/H model}
+\usage{
+  \method{print}{M_M_S_INF_H} (x, ...)
+}
+\arguments{
+  \item{x}{a M_M_S_INF_H object}
+
+  \item{...}{Further arguments passed to or from other
+  methods.}
+}
+\description{
+  Print the main characteristics of a M/M/S/\eqn{\infty}/H
+  model
+}
+\keyword{internal}
+

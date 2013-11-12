@@ -1,0 +1,17 @@
+\name{print.M_M_S_K}
+\alias{print.M_M_S_K}
+\title{Print the main characteristics of a M_M_S_K model}
+\usage{
+  \method{print}{M_M_S_K} (x, ...)
+}
+\arguments{
+  \item{x}{M_M_S_K class object}
+
+  \item{...}{Further arguments passed to or from other
+  methods.}
+}
+\description{
+  Print the main characteristics of a M_M_S_K model
+}
+\keyword{internal}
+

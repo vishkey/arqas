@@ -1,0 +1,89 @@
+\name{Pn}
+\alias{Pn}
+\alias{Pn.ClosedJackson}
+\alias{Pn.M_M_1}
+\alias{Pn.M_M_1_INF_H}
+\alias{Pn.M_M_1_K}
+\alias{Pn.M_M_INF}
+\alias{Pn.M_M_S}
+\alias{Pn.M_M_S_INF_H}
+\alias{Pn.M_M_S_INF_H_Y}
+\alias{Pn.M_M_S_K}
+\alias{Pn.MarkovianModel}
+\alias{Pn.OpenJackson}
+\title{Steady-state probability of having n customers in the system}
+\usage{
+  Pn(qm, n)
+
+  \method{Pn}{MarkovianModel} (qm, n)
+
+  \method{Pn}{M_M_1} (qm, n)
+
+  \method{Pn}{M_M_S} (qm, n)
+
+  \method{Pn}{M_M_1_K} (qm, n)
+
+  \method{Pn}{M_M_S_K} (qm, n)
+
+  \method{Pn}{M_M_1_INF_H} (qm, n)
+
+  \method{Pn}{M_M_S_INF_H} (qm, n)
+
+  \method{Pn}{M_M_S_INF_H_Y} (qm, n)
+
+  \method{Pn}{M_M_INF} (qm, n)
+
+  \method{Pn}{OpenJackson} (qm, n)
+
+  \method{Pn}{ClosedJackson} (qm, n)
+}
+\arguments{
+  \item{qm}{Queueing model}
+
+  \item{n}{Customers}
+}
+\value{
+  \deqn{P(n)}
+}
+\description{
+  Returns the probability of having n customers in the
+  given queueing model
+}
+\details{
+  \code{Pn.MarkovianModel} implements the default method
+  (generates a message)
+
+  \code{Pn.M_M_1} implements the method for a M/M/1
+  queueing model
+
+  \code{Pn.M_M_S} implements the method for a M/M/S
+  queueing model
+
+  \code{Pn.M_M_1_K} implements the method for a M/M/1/K
+  queueing model
+
+  \code{Pn.M_M_S_K} implements the method for a M/M/S/K
+  queueing model
+
+  \code{Pn.M_M_1_INF_H} implements the method for a
+  M/M/1/\eqn{\infty}/H queueing model
+
+  \code{Pn.M_M_S_INF_H} implements the method for a
+  M/M/s/\eqn{\infty}/H queueing model
+
+  \code{Pn.M_M_S_INF_H_Y} implements the method for a
+  M/M/s/\eqn{\infty}/H/Y queueing model
+
+  \code{Pn.M_M_INF} implements the method for a M_M_INF
+  queueing model
+
+  \code{Pn.OpenJackson} implements the method for an Open
+  Jackson Network model In this function n, should have the
+  same length than the number of nodes in the network.
+
+  \code{Pn.ClosedJackson} implements the method for a
+  Closed Jackson Network model In this function n, should
+  have the same length than the number of nodes in the
+  network.
+}
+

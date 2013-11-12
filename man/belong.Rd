@@ -1,0 +1,19 @@
+\name{belong}
+\alias{belong}
+\title{Checks if a object belongs to a determinate package}
+\usage{
+  belong(obj, packagename)
+}
+\arguments{
+  \item{obj}{Object to check}
+
+  \item{packagename}{Name of the package}
+}
+\value{
+  TRUE if obj belongs to the package, FALSE if not
+}
+\description{
+  Checks if a object belongs to a determinate package
+}
+\keyword{internal}
+
