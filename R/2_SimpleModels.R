@@ -35,7 +35,7 @@ M_M_1 <- function(lambda=3, mu=6) {
   return(obj)        
 }
 
-exportToUI(M_M_1, "M/M/1", c("numeric", "numeric"), "markovian")
+exportToUI(M_M_1, "M/M/1", c("numeric", "numeric"), c("M_M_1", "M_M_S", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_1
@@ -60,8 +60,8 @@ Pn.M_M_1 <- function(qm, n) {
 #' \code{FW.M_M_1} implements the method for a M/M/1 queueing model
 #' @export
 FW.M_M_1 <- function(qm, x) {
-  lambda <- rate(qm$arr.distr)
-  mu <- rate(qm$serv.distr)
+  lambda <- rate(qm$arrivalDistribution)
+  mu <- rate(qm$serviceDistribution)
   return(ifelse(x <0, stop("W(t): Index out of limits: 0:inf\n"), 1-exp((lambda-mu)*x)))
 }
 
@@ -71,8 +71,8 @@ FW.M_M_1 <- function(qm, x) {
 #' \code{FWq.M_M_1} implements the method for a M/M/1 queueing model
 #' @export
 FWq.M_M_1 <- function(qm, x) {
-  lambda <- rate(qm$arr.distr)
-  mu <- rate(qm$serv.distr)
+  lambda <- rate(qm$arrivalDistribution)
+  mu <- rate(qm$serviceDistribution)
   return(ifelse(x <0, stop("Wq(t): Index out of limits: 0:inf\n"), 1-(lambda/mu)*exp((lambda-mu)*x))) 
 }
 
@@ -124,7 +124,7 @@ M_M_S <- function (lambda=3, mu=6, s=2) {
   return(obj)        
 }
 
-exportToUI(M_M_S, "M/M/s", c("numeric", "numeric", "numeric"), "markovian")
+exportToUI(M_M_S, "M/M/s", c("numeric", "numeric", "numeric"), c("M_M_S", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_S
@@ -156,8 +156,8 @@ Pn.M_M_S <- function(qm, n) {
 #' \code{FW.M_M_S} implements the method for a M/M/S queueing model
 #' @export
 FW.M_M_S <- function(qm, x) {
-  lambda <- rate(qm$arr.distr)
-  mu <- rate(qm$serv.distr)
+  lambda <- rate(qm$arrivalDistribution)
+  mu <- rate(qm$serviceDistribution)
   if (lambda/mu == (qm$servers-1)) {
     return(ifelse(x < 0, 0, 1-(1+qm$out$cn[qm$servers+1]*qm$out$p0*x*mu)*exp(-mu*x)))
   }
@@ -173,8 +173,8 @@ FW.M_M_S <- function(qm, x) {
 #' \code{FWq.M_M_S} implements the method for a M/M/S queueing model
 #' @export
 FWq.M_M_S <- function(qm, x) {
-  lambda <- rate(qm$arr.distr)
-  mu <- rate(qm$serv.distr)
+  lambda <- rate(qm$arrivalDistribution)
+  mu <- rate(qm$serviceDistribution)
   return(ifelse(x < 0, 0, 1-qm$out$cn[qm$servers+1]*qm$out$p0*exp(-(qm$servers*mu-lambda)*x)))
 }
 
@@ -225,7 +225,7 @@ M_M_1_K <- function(lambda=3, mu=6, k=2) {
   return(obj)
 }
 
-exportToUI(M_M_1_K, "M/M/1/K", c("numeric", "numeric", "numeric"), "markovian")
+exportToUI(M_M_1_K, "M/M/1/K", c("numeric", "numeric", "numeric"), c("M_M_1_K", "M_M_S_K", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_1_K
@@ -297,7 +297,7 @@ FW.M_M_1_K <- function(qm, x) {
   minval <- min(x)
   if (minval < 0) {stop("W(t): Index out of limites: 0:Inf\n")}
   
-  mu <- rate(qm$serv.distr)
+  mu <- rate(qm$serviceDistribution)
   A <- S <- rep(1, length(x))
   B <- rep(Qn(qm, 0), length(x))
   for(n in 1:qm$k) {
@@ -372,7 +372,7 @@ M_M_S_K <- function(lambda=3, mu=6, s=2, k=3)  {
   return(obj)
 }
 
-exportToUI(M_M_S_K, "M/M/s/K", c("numeric", "numeric", "numeric", "numeric"), "markovian")
+exportToUI(M_M_S_K, "M/M/s/K", c("numeric", "numeric", "numeric", "numeric"), c("M_M_S_K", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_S_K
@@ -434,7 +434,7 @@ FWq.M_M_S_K <- function(qm, x) {
   minval <- min(x)
   if (minval < 0) {stop("Wq(t): Index out of limits: 0:Inf")}
   
-  mu <- rate(qm$serv.distr)
+  mu <- rate(qm$serviceDistribution)
   A <- S <- rep(1, length(x))
   B <- rep(Qn(qm, qm$servers), length(x))
   for(n in (qm$servers+1):(qm$k+qm$servers-1)) {
@@ -453,7 +453,7 @@ FWq.M_M_S_K <- function(qm, x) {
 FW.M_M_S_K <- function(qm, x) {
   minval <- min(x)
   if (minval < 0) {stop("W(t): Index out of limits: 0:Inf")}
-  mu <- rate(qm$serv.distr)
+  mu <- rate(qm$serviceDistribution)
   integrateaux <- function(t) {
     fwaux <- function(x) {FWq(qm, t-x)*mu*exp(mu*x*-1)}
     integrate(fwaux, lower=0, upper=t)

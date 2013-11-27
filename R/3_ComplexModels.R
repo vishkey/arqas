@@ -48,7 +48,7 @@ M_M_1_INF_H <- function(lambda=3, mu=6, h=5) {
   return(obj)
 }
 
-exportToUI(M_M_1_INF_H, "M/M/1/INF/H", c("numeric", "numeric", "numeric"), "markovian")
+exportToUI(M_M_1_INF_H, "M/M/1/INF/H", c("numeric", "numeric", "numeric"), c("M_M_1_INF_H", "M_M_S_INF_H", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_1_INF_H
@@ -95,7 +95,7 @@ FW.M_M_1_INF_H <- function(qm, x) {
   minval <- min(x)
   if (minval < 0) {stop("W(t): Index out of limits: 0:Inf\n")}
   
-  mu <- rate(qm$serv.distr)
+  mu <- rate(qm$serviceDistribution)
   A <- S <- rep(1, length(x))
   B <- rep(Qn(qm, 0), length(x))
   
@@ -161,7 +161,7 @@ M_M_S_INF_H <- function(lambda=3, mu=6, s=3, h=5) {
   return(obj)       
 }
 
-exportToUI(M_M_S_INF_H, "M/M/s/INF/H", c("numeric", "numeric", "numeric", "numeric"), "markovian")
+exportToUI(M_M_S_INF_H, "M/M/s/INF/H", c("numeric", "numeric", "numeric", "numeric"), c("M_M_S_INF_H", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_S_INF_H
@@ -219,7 +219,7 @@ FWq.M_M_S_INF_H <- function(qm, x) {
   minval <- min(x)
   if (minval < 0) {stop("Wq(t): Index out of limits: 0:Inf\n")}
   
-  mu <- rate(qm$serv.distr)
+  mu <- rate(qm$serviceDistribution)
   A <- S <- rep(1, length(x))
   B <- rep(Qn(qm, qm$servers), length(x))
   
@@ -242,7 +242,7 @@ FW.M_M_S_INF_H <- function(qm, x) {
   minval <- min(x)
   if (minval < 0) {stop("W(t): Index out of limits: 0:Inf")}
   
-  mu <- rate(qm$serv.distr)
+  mu <- rate(qm$serviceDistribution)
   integrateaux <- function(t) {
     fwaux <- function(x) {FWq(qm, t-x)*mu*exp(mu*x*-1)}
     integrate(fwaux, lower=0, upper=t)
@@ -316,7 +316,7 @@ M_M_S_INF_H_Y <- function(lambda=3, mu=6, s=3, h=5, y=3) {
   return(obj)
 }
 
-exportToUI(M_M_S_INF_H_Y, "M/M/s/INF/H with Y replacements", c("numeric", "numeric", "numeric", "numeric", "numeric"), "markovian")
+exportToUI(M_M_S_INF_H_Y, "M/M/s/INF/H with Y replacements", c("numeric", "numeric", "numeric", "numeric", "numeric"),  c("M_M_S_INF_H_Y", "M_M_S_INF_H", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_S_INF_H_Y
@@ -421,7 +421,7 @@ M_M_INF <- function(lambda=3, mu=6) {
   return(obj)
 }
 
-exportToUI(M_M_INF, "M/M/INF", c("numeric", "numeric"), "markovian")
+exportToUI(M_M_INF, "M/M/INF", c("numeric", "numeric"),  c("M_M_INF", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_INF
@@ -437,8 +437,8 @@ Pn.M_M_INF <- function(qm, n) {
   maxval <- max(n)
   if (minval < 0) {stop("P(n): Index out of limits: 0:Inf\n")}
   
-  lambda <- rate(qm$arr.distr)
-  mu <- rate(qm$serv.distr)        
+  lambda <- rate(qm$arrivalDistribution)
+  mu <- rate(qm$serviceDistribution)        
   cn <- c(1, lambda/((1:maxval)*mu))
   cn <- cumprod(cn)
   

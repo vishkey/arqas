@@ -2,13 +2,14 @@
 \alias{G_G_S}
 \title{Obtains the main characteristics of a G/G/s model by simulation}
 \usage{
-  G_G_S(arr.distr = Exp(1), serv.distr = Exp(1), s = 2,
-    staClients = 100, nClients = 1000, historic = FALSE)
+  G_G_S(arrivalDistribution = Exp(1),
+    serviceDistribution = Exp(1), s = 2, staClients = 100,
+    nClients = 1000, historic = FALSE)
 }
 \arguments{
-  \item{arr.distr}{Arrival distribution}
+  \item{arrivalDistribution}{Arrival distribution}
 
-  \item{serv.distr}{Service distribution}
+  \item{serviceDistribution}{Service distribution}
 
   \item{s}{Number of servers}
 

@@ -2,12 +2,12 @@
 \alias{ClosedNetwork}
 \title{Obtains the main characteristics of a Closed Network model by simulation}
 \usage{
-  ClosedNetwork(serv.distr, s, p, staClients, nClients,
-    transitions, historic = FALSE)
+  ClosedNetwork(serviceDistribution, s, p, staClients,
+    nClients, transitions, historic = FALSE)
 }
 \arguments{
-  \item{serv.distr}{Service distributions for the nodes of
-  the network}
+  \item{serviceDistribution}{Service distributions for the
+  nodes of the network}
 
   \item{s}{Vector of servers at each node}
 

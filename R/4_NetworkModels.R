@@ -78,7 +78,7 @@ OpenJacksonNetwork <- function(lambda=c(20, 30), mu=c(100, 25), s=c(1,2), p=matr
   return(obj)    
 }
 
-exportToUI(OpenJacksonNetwork, "Open Jackson Network", c("vector", "vector", "vector", "matrix"), c("network", "markovian"))
+exportToUI(OpenJacksonNetwork, "Open Jackson Network", c("vector", "vector", "vector", "matrix"), c("OpenJackson", "Network", "MarkovianModel"))
 
 #' Data for a Open Network Example
 #' 
@@ -221,7 +221,7 @@ CN_example <- function() {
 #' \item{eff}{Efficiency of the system \eqn{Eff = W/(W-W_q)}}
 #' @export 
 #' @family AnaliticalModels
-ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)), n=3) {
+ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)), n=10) {
   sizemu <- length(mu)
   sizes <- length(s)
   if (sizemu != sizes)
@@ -283,10 +283,10 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0
     obj$prob <- obj$prob[shiftdown, shiftdown]
   }
   #obj$out$nodes <- nodes
-  obj$out$l <- nodes[,"L"]
-  obj$out$lq <- nodes[, "Lq"]
-  obj$out$w <- nodes[, "W"]
-  obj$out$wq <- nodes[, "Wq"]
+  obj$out$l <- as.numeric(nodes[,"L"])
+  obj$out$lq <- as.numeric(nodes[, "Lq"])
+  obj$out$w <- as.numeric(nodes[, "W"])
+  obj$out$wq <- as.numeric(nodes[, "Wq"])
   obj$out$lqt <- sum(obj$out$lq)
   obj$out$lt <- sum(obj$out$l)
   obj$out$wt <- obj$out$lt/sum(obj$lambda)
@@ -295,7 +295,7 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0
   return(obj)
 }
 
-exportToUI(ClosedJacksonNetwork, "Closed Jackson Network",  c("vector", "vector", "matrix", "numeric"), c("network", "markovian"))
+exportToUI(ClosedJacksonNetwork, "Closed Jackson Network",  c("vector", "vector", "matrix", "numeric"),  c("ClosedJackson", "Network", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn ClosedJackson
@@ -310,7 +310,7 @@ Pn.ClosedJackson <- function(qm, n) {
   for(i in 1:(qm$k)) {
     acum <- acum * f_close(qm, i, n[i])
   }
-  probs <- (1/qm$out$gkn)* prod(sapply)
+  probs <- (1/qm$out$gkn)* acum
   return(probs)
 }
 

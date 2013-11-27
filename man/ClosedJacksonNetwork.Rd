@@ -5,7 +5,7 @@
   ClosedJacksonNetwork(mu = c(5, 5, 10, 15),
     s = c(2, 2, 1, 1),
     p = array(c(0.25, 0.15, 0.5, 0.4, 0.15, 0.35, 0.25, 0.3, 0.2, 0.2, 0.15, 0.25, 0.4, 0.3, 0.1, 0.05), dim = c(4, 4)),
-    n = 3)
+    n = 10)
 }
 \arguments{
   \item{mu}{Vector of mean service rates}

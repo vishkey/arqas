@@ -2,22 +2,22 @@
 #'
 #' Constructor for \code{MarkovianModel} class.
 #'
-#' @param arr.distr Arrival distribution (object of S4-class \code{distr} 
+#' @param arrdistr Arrival distribution (object of S4-class \code{distr} 
 #' defined in \pkg{distr} package)
-#' @param serv.distr Service distribution (object of S4-class \code{distr} 
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
 #' defined in \pkg{distr} package)
 #' @return 
 #' An object of class \code{MarkovianModel}, a list with the following components:
-#' \item{arr.distr}{Arrival distribution}
-#' \item{serv.distr}{Service distribution}
+#' \item{arrivalDistribution}{Arrival distribution}
+#' \item{serviceDistribution}{Service distribution}
 #' @export
-MarkovianModel <- function (arr.distr = Exp(1), serv.distr = Exp(1)) {
-  packagearr <- attr(class(arr.distr), "package")
-  packageserv <- attr(class(serv.distr), "package")
-  if (is.null(packagearr) || packagearr != "distr") stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-  if (is.null(packageserv)|| packageserv!= "distr") stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+MarkovianModel <- function (arrivalDistribution = Exp(1), serviceDistribution = Exp(1)) {
+  packagearr <- attr(class(arrivalDistribution), "package")
+  packageserv <- attr(class(serviceDistribution), "package")
+  if (is.null(packagearr) || packagearr != "distr") stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+  if (is.null(packageserv)|| packageserv!= "distr") stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
   
-  obj <- list(arr.distr=arr.distr, serv.distr=serv.distr)
+  obj <- list(arrivalDistribution=arrivalDistribution, serviceDistribution=serviceDistribution)
   oldClass(obj) <- "MarkovianModel"
   return(obj)
 }
@@ -150,9 +150,19 @@ print.MarkovianModel <- function(x, ...) {
 #' @keywords internal
 uiList <- list()
 
+#' List of registered distributions to the UI
+#' @export
+#' @keywords internal
+distrList <- list()
+
 #' Counter of exported funtions
 #' @keywords internal
 exportedFunctions <- 0
+
+#' Counter of registered distributions
+#' @keywords internal
+registeredDistributions <- 0
+
 #' Exports a function to the UI
 #' 
 #' @param fun Function of the model
@@ -167,6 +177,25 @@ exportToUI <- function(fun, name, types, class) {
   oldClass(el) <- class
   uiList[[exportedFunctions]] <<- el
 }
+
+#' Register a distribution to the UI
+#' 
+#' @param fun Function of the distribution
+#' @param name Name of the distribution
+#' @export
+registerDistribution <- function(fun, name) {
+  registeredDistributions <<- registeredDistributions + 1
+  
+  el <- list(id=registeredDistributions, name=name, fun=fun)
+  distrList[[registeredDistributions]] <<- el
+}
+
+registerDistribution(Exp, "Exponential")
+registerDistribution(Beta, "Beta")
+registerDistribution(Norm, "Normal")
+registerDistribution(Weibull, "Weibull")
+registerDistribution(Unif, "Uniform")
+registerDistribution(Chisq, "Chi Square")
 
 #' Shows the main graphics of the parameters of a Markovian Model
 #' 

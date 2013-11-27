@@ -2,13 +2,14 @@
 \alias{G_G_1_K}
 \title{Obtains the main characteristics of a G/G/1/K model by simulation}
 \usage{
-  G_G_1_K(arr.distr = Exp(1), serv.distr = Exp(1), K = 2,
-    staClients = 100, nClients = 1000, historic = FALSE)
+  G_G_1_K(arrivalDistribution = Exp(1),
+    serviceDistribution = Exp(1), K = 2, staClients = 100,
+    nClients = 1000, historic = FALSE)
 }
 \arguments{
-  \item{arr.distr}{Arrival distribution}
+  \item{arrivalDistribution}{Arrival distribution}
 
-  \item{serv.distr}{Service distribution}
+  \item{serviceDistribution}{Service distribution}
 
   \item{K}{Maximun size of the queue}
 

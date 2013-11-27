@@ -2,13 +2,14 @@
 \alias{G_G_1}
 \title{Obtains the main characteristics of a G/G/1 model by simulation}
 \usage{
-  G_G_1(arr.distr = Exp(1), serv.distr = Exp(1),
-    staClients = 100, nClients = 1000, historic = FALSE)
+  G_G_1(arrivalDistribution = Exp(1),
+    serviceDistribution = Exp(1), staClients = 100,
+    nClients = 1000, historic = FALSE)
 }
 \arguments{
-  \item{arr.distr}{Arrival distribution}
+  \item{arrivalDistribution}{Arrival distribution}
 
-  \item{serv.distr}{Service distribution}
+  \item{serviceDistribution}{Service distribution}
 
   \item{staClients}{Number of customers used in the
   stabilization stage}

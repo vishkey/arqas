@@ -2,15 +2,15 @@
 \alias{OpenNetwork}
 \title{Obtains the main characteristics of an Open Network model by simulation}
 \usage{
-  OpenNetwork(arr.distr, serv.distr, s, p, staClients,
-    transitions, historic = FALSE)
+  OpenNetwork(arrivalDistribution, serviceDistribution, s,
+    p, staClients, transitions, historic = FALSE)
 }
 \arguments{
-  \item{arr.distr}{PairList indicating the arrival
-  distribution and the node that uses it.}
+  \item{arrivalDistribution}{PairList indicating the
+  arrival distribution and the node that uses it.}
 
-  \item{serv.distr}{Vector of service distribution in each
-  node}
+  \item{serviceDistribution}{Vector of service distribution
+  in each node}
 
   \item{s}{Vector of servers in each node}
 

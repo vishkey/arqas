@@ -1,0 +1,18 @@
+\name{print.SimulatedNetwork}
+\alias{print.SimulatedNetwork}
+\title{Print the main characteristics of a SimulatedNetwork object}
+\usage{
+  \method{print}{SimulatedNetwork} (x, ...)
+}
+\arguments{
+  \item{x}{SimulatedNetwork object}
+
+  \item{...}{Further arguments passed to or from other
+  methods.}
+}
+\description{
+  Print the main characteristics of a SimulatedNetwork
+  object
+}
+\keyword{internal}
+

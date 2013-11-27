@@ -15,8 +15,8 @@ belong <- function(obj, packagename) {
 
 #' Obtains the main characteristics of a G/G/1 model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
 #' @param historic Parameter used to activate/deactivate the historic information
@@ -33,20 +33,20 @@ belong <- function(obj, packagename) {
 #' @export
 #' @family SimulatedModels
 
-G_G_1 <- function(arr.distr = Exp(1), serv.distr = Exp(1), staClients = 100, nClients = 1000, historic = FALSE) {
-      if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-      if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_1 <- function(arrivalDistribution = Exp(1), serviceDistribution = Exp(1), staClients = 100, nClients = 1000, historic = FALSE) {
+      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
       if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
       if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
       
-      tArr <- r(arr.distr) (staClients+nClients)
-      tServ <- r(serv.distr) (staClients+nClients)
+      tArr <- r(arrivalDistribution) (staClients+nClients)
+      tServ <- r(serviceDistribution) (staClients+nClients)
       iArr <- iServ <- 1
       sysClients <- simClients<- 0
       a <- 0
       b <- -1
       
-      obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, Nclients=nClients)
+      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
       if (historic) hist <- matrix(nrow=nClients, ncol=6, dimnames=list(1:nClients, c("L", "Lq", "W","Wq", "Clients", "Intensity")))
       
       while (simClients < staClients) {
@@ -79,8 +79,14 @@ G_G_1 <- function(arr.distr = Exp(1), serv.distr = Exp(1), staClients = 100, nCl
       simClients <- 0
       cron <- d <- c <- 0
       tnClients <- numeric(nClients)
-      
+      actualper <- seq(0, 100, 10)
+      percentages <- (actualper*nClients)/100
+      iper <- 1 
       while (simClients < nClients) {
+        if (simClients > percentages[iper]) {
+          iper <- iper+1
+          message(paste(actualper[iper], "%", sep=""))
+        }
         if (sysClients > 0) {
           tMin <- min(a, b)
         }
@@ -145,12 +151,12 @@ G_G_1 <- function(arr.distr = Exp(1), serv.distr = Exp(1), staClients = 100, nCl
       return(obj)
 }
 
-exportToUI(G_G_1, "G/G/1",  c("distr", "distr", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(G_G_1, "G/G/1",  c("distr", "distr", "numeric", "numeric", "boolean"),  c("G_G_1", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/s model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param s Number of servers
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
@@ -168,22 +174,22 @@ exportToUI(G_G_1, "G/G/1",  c("distr", "distr", "numeric", "numeric", "boolean")
 #' @export
 #' @family SimulatedModels
 
-G_G_S <- function (arr.distr=Exp(1), serv.distr=Exp(1), s=2, staClients=100, nClients=1000, historic=FALSE) {
-      if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-      if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_S <- function (arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2, staClients=100, nClients=1000, historic=FALSE) {
+      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
       if (s <= 0) stop("Argument 's' must be greather than 0.")
       if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
       if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
       
-      tArr <- r(arr.distr) (nClients+staClients)
-      tServ <- r(serv.distr) (nClients+staClients)
+      tArr <- r(arrivalDistribution) (nClients+staClients)
+      tServ <- r(serviceDistribution) (nClients+staClients)
       iArr <-1
       iServ <- 0
       bussyservs <- numeric()
       sysClients <- simClients<- 0
       cron <- d <- c <- 0
      
-      obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, Servs=s, Nclients=nClients)
+      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Nclients=nClients)
       tnClients <- numeric(nClients)
       if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
       
@@ -306,12 +312,12 @@ G_G_S <- function (arr.distr=Exp(1), serv.distr=Exp(1), s=2, staClients=100, nCl
       return(obj)
 }
 
-exportToUI(G_G_S, "G/G/s", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(G_G_S, "G/G/s", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"),  c("G_G_S", "SimulatedModel"))
 
 #'Obtains the main characteristics of a G/G/1/K model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param K Maximun size of the queue
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
@@ -329,21 +335,21 @@ exportToUI(G_G_S, "G/G/s", c("distr", "distr", "numeric", "numeric", "numeric", 
 #' @export
 #' @family SimulatedModels
 
-G_G_1_K <- function (arr.distr=Exp(1), serv.distr=Exp(1), K=2, staClients=100, nClients=1000, historic=FALSE) {
-      if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-      if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_1_K <- function (arrivalDistribution=Exp(1), serviceDistribution=Exp(1), K=2, staClients=100, nClients=1000, historic=FALSE) {
+      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
       if (K <= 0) stop("Argument 'K' must be greather than 0.")
       if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
       if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
       
-      tArr <- r(arr.distr) ((nClients+staClients)*2)
-      tServ <- r(serv.distr) ((nClients+staClients)*2)
+      tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+      tServ <- r(serviceDistribution) ((nClients+staClients)*2)
       iArr <- iServ <- 1
       sysClients <- simClients<- 0
       cron <- d <- c <- 0
       tnClients <- numeric(nClients)
       
-      obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, Nclients=nClients)
+      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
       if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
       
       while(simClients < staClients) {
@@ -447,12 +453,12 @@ G_G_1_K <- function (arr.distr=Exp(1), serv.distr=Exp(1), K=2, staClients=100, n
       return(obj)
 }
 
-exportToUI(G_G_1_K, "G/G/1/K", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(G_G_1_K, "G/G/1/K", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"), c("G_G_1_K", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/s/K model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param s Number of servers
 #' @param K Maximun size of the queue
 #' @param staClients Number of customers used in the stabilization stage
@@ -471,22 +477,22 @@ exportToUI(G_G_1_K, "G/G/1/K", c("distr", "distr", "numeric", "numeric", "numeri
 #' @export
 #' @family SimulatedModels
 
-G_G_S_K <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, K=3, staClients=100, nClients=1000, historic=FALSE) {
-      if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-      if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_S_K <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2, K=3, staClients=100, nClients=1000, historic=FALSE) {
+      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
       if (s <= 0) stop("Argument 's' must be greather than 0.")
       if (K <= 0) stop("Argument 'K' must be greather than 0.")
       if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
       if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
       
-      tArr <- r(arr.distr) ((nClients+staClients)*2)
-      tServ <- r(serv.distr) ((nClients+staClients)*2)
+      tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+      tServ <- r(serviceDistribution) ((nClients+staClients)*2)
       iArr <- iServ <- 1
       bussyservers <- rep(NA, s)
       sysClients <- simClients<- 0
       cron <- d <- c <- 0
       
-      obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, Servs=s, Nclients=nClients)
+      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Nclients=nClients)
       tnClients <- numeric(nClients)
       if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
       
@@ -605,12 +611,12 @@ G_G_S_K <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, K=3, staClients=10
       return(obj)
 }
 
-exportToUI(G_G_S_K, "G/G/s/K",  c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(G_G_S_K, "G/G/s/K",  c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "boolean"),  c("G_G_S_K", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/1/\eqn{\infty}/H model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param H Population size
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
@@ -628,22 +634,22 @@ exportToUI(G_G_S_K, "G/G/s/K",  c("distr", "distr", "numeric", "numeric", "numer
 #' @export
 #' @family SimulatedModels
 
-G_G_1_INF_H <- function(arr.distr=Exp(1), serv.distr=Exp(1), H=2, staClients=nClients*0.5, nClients=1000, historic=FALSE) {
-    if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-    if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_1_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), H=2, staClients=100, nClients=1000, historic=FALSE) {
+    if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+    if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
     if (H <= 0) stop("Argument 'H' must be greather than 0.")
     if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
     if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
     
-    tArr <- r(arr.distr) ((nClients+staClients)*2)
-    tServ <- r(serv.distr) ((nClients+staClients)*2)
+    tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+    tServ <- r(serviceDistribution) ((nClients+staClients)*2)
     possibleClients <- tArr[1:H]
     iServ <- 1
     iArr <- H+1
     sysClients <- 0
     simClients <- 0
     
-    obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, H=H, Nclients=nClients)
+    obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, H=H, Nclients=nClients)
     tnClients <- numeric(nClients)
     if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
     
@@ -751,12 +757,12 @@ G_G_1_INF_H <- function(arr.distr=Exp(1), serv.distr=Exp(1), H=2, staClients=nCl
     return(obj)
 }
 
-exportToUI(G_G_1_INF_H, "G/G/1/INF/H", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(G_G_1_INF_H, "G/G/1/INF/H", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"), c("G_G_1_INF_H", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H  model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param s Number of servers
 #' @param H Population size
 #' @param staClients Number of customers used in the stabilization stage
@@ -775,16 +781,16 @@ exportToUI(G_G_1_INF_H, "G/G/1/INF/H", c("distr", "distr", "numeric", "numeric",
 #' @export
 #' @family SimulatedModels
 
-G_G_S_INF_H <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, H=2, staClients=100, nClients=1000, historic=FALSE) {
-      if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-      if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_S_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2, H=2, staClients=100, nClients=1000, historic=FALSE) {
+      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
       if (s <= 0) stop("Argument 's' must be greather than 0.")
       if (H <= 0) stop("Argument 'H' must be greather than 0.")
       if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
       if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
   
-      tArr <- r(arr.distr) ((nClients+staClients)*2)
-      tServ <- r(serv.distr) ((nClients+staClients)*2)
+      tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+      tServ <- r(serviceDistribution) ((nClients+staClients)*2)
       possibleClients <- tArr[1:H]
       bussyservers <- rep(NA, s)
       iServ <- 1
@@ -792,7 +798,7 @@ G_G_S_INF_H <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, H=2, staClient
       sysClients <- 0
       simClients <- 0
       nClicien <- 100/nClients
-      obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, Servs=s, H=H, Nclients=nClients)
+      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Nclients=nClients)
       tnClients <- numeric(nClients)
       if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
       
@@ -913,17 +919,17 @@ G_G_S_INF_H <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, H=2, staClient
         obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
       else
         obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-      oldClass(obj) <-  c("G_G_s_INF_H", "SimulatedModel")
+      oldClass(obj) <-  c("G_G_S_INF_H", "SimulatedModel")
       close(progressbar)
       return(obj)
 }
 
-exportToUI(G_G_S_INF_H, "G/G/s/INF/H", c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(G_G_S_INF_H, "G/G/s/INF/H", c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "boolean"), c("G_G_S_INF_H", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H with Y replacements model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param s Number of servers
 #' @param H Population size
 #' @param Y Number of replacements
@@ -942,17 +948,17 @@ exportToUI(G_G_S_INF_H, "G/G/s/INF/H", c("distr", "distr", "numeric", "numeric",
 #' \item{historic}{Optional parameter that stores the evolution of \eqn{L}, \eqn{Lq}, \eqn{W} and \eqn{Wq} during the simulation}
 #' @export
 #' @family SimulatedModels
-G_G_S_INF_H_Y <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, H=2, Y=3, staClients=100, nClients=1000, historic=FALSE) {
-  if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-  if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2, H=2, Y=3, staClients=100, nClients=1000, historic=FALSE) {
+  if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+  if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
   if (s <= 0) stop("Argument 's' must be greather than 0.")
   if (H <= 0) stop("Argument 'H' must be greather than 0.")
   if (Y <= 0) stop("Argument 'Y' must be greather than 0.")
   if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
   if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
   
-  tArr <- r(arr.distr) ((nClients+staClients)*2)
-  tServ <- r(serv.distr) ((nClients+staClients)*2)
+  tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+  tServ <- r(serviceDistribution) ((nClients+staClients)*2)
   possibleClients <- tArr[1:H]
 #   bussyservers <- rep(-1, s)
   bussyservers <- rep(NA, s)
@@ -961,7 +967,7 @@ G_G_S_INF_H_Y <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, H=2, Y=3, st
   sysClients <- 0
   simClients <- 0
   
-  obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, Servs=s, H=H, Y=Y, Nclients=nClients)
+  obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Y=Y, Nclients=nClients)
   tnClients <- numeric(nClients)
   if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
   
@@ -1104,12 +1110,12 @@ G_G_S_INF_H_Y <- function(arr.distr=Exp(1), serv.distr=Exp(1), s=2, H=2, Y=3, st
   return(obj)
 }
 
-exportToUI(G_G_S_INF_H_Y, "G/G/s/INF/H with Y replacements", c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(G_G_S_INF_H_Y, "G/G/s/INF/H with Y replacements", c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "numeric", "boolean"),  c("G_G_S_INF_H_Y", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/\eqn{\infty} model by simulation
 #' 
-#' @param arr.distr Arrival distribution
-#' @param serv.distr Service distribution
+#' @param arrivalDistribution Arrival distribution
+#' @param serviceDistribution Service distribution
 #' @param staClients Number of customers used in stabilization stage
 #' @param nClients Number of customers used in the simulation stage
 #' @param historic Parameter to activate/deactivate the historic information
@@ -1125,21 +1131,21 @@ exportToUI(G_G_S_INF_H_Y, "G/G/s/INF/H with Y replacements", c("distr", "distr",
 #' \item{historic}{Optional parameter that stores the evolution of \eqn{L}, \eqn{Lq}, \eqn{W} and \eqn{Wq} during the simulation}
 #' @export
 #' @family SimulatedModels
-G_G_INF <- function(arr.distr=Exp(1), serv.distr=Exp(1), staClients=100, nClients=1000, historic=FALSE) {
-  if (!belong(arr.distr, "distr")) stop("Argument 'arr.distr' must be a valid Class of the Distr package")
-  if (!belong(serv.distr, "distr")) stop("Argument 'serv.distr'must be a valid Class of the Distr package")
+G_G_INF <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), staClients=100, nClients=1000, historic=FALSE) {
+  if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+  if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
   if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
   if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
   
-  tArr <- r(arr.distr) ((nClients+staClients)*2)
-  tServ <- r(serv.distr) ((nClients+staClients)*2)
+  tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+  tServ <- r(serviceDistribution) ((nClients+staClients)*2)
   iServ <- iArr <- 1
   sysClients <- 0
   simClients <- 0
   a <- 0
   b <- -1
   
-  obj <- list(Arr.distr = arr.distr, Serv.distr=serv.distr, Nclients=nClients)
+  obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
   tnClients <- numeric(nClients)
   if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
   
@@ -1237,19 +1243,19 @@ G_G_INF <- function(arr.distr=Exp(1), serv.distr=Exp(1), staClients=100, nClient
   return(obj)
 }
 
-exportToUI(G_G_INF, "G/G/INF", c("distr", "distr", "numeric","numeric", "boolean"), "simulation")
+exportToUI(G_G_INF, "G/G/INF", c("distr", "distr", "numeric","numeric", "boolean"),  c("G_G_INF", "SimulatedModel"))
 
 SCN_example <- function (sta, trans) {
-  serv.distr <- c(Exp(5), Exp(5), Exp(10), Exp(15))
+  serviceDistribution <- c(Exp(5), Exp(5), Exp(10), Exp(15))
   s <- c(2,2,1,1)
   p <- array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4))
   nClients <- 3
-  ClosedNetwork(serv.distr, s, p, sta, nClients, trans)
+  ClosedNetwork(serviceDistribution, s, p, sta, nClients, trans)
 }
 
 #' Obtains the main characteristics of a Closed Network model by simulation
 #' 
-#' @param serv.distr Service distributions for the nodes of the network
+#' @param serviceDistribution Service distributions for the nodes of the network
 #' @param s Vector of servers at each node
 #' @param p Routing matrix, where \eqn{p_{ij}} is the routing probability from node i to node j
 #' @param staClients Number of customers used in the stabilization stage
@@ -1270,8 +1276,8 @@ SCN_example <- function (sta, trans) {
 #' @export
 #' @family SimulatedModels
 
-ClosedNetwork <- function(serv.distr, s, p, staClients, nClients, transitions, historic=FALSE) {
-  if (!belong(serv.distr, "distr")) stop("All elements in argument 'serv.distr'must be a valid Class of the Distr package")
+ClosedNetwork <- function(serviceDistribution, s, p, staClients, nClients, transitions, historic=FALSE) {
+  if (!belong(serviceDistribution, "distr")) stop("All elements in argument 'serviceDistribution'must be a valid Class of the Distr package")
   if (any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
   if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
   if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
@@ -1281,12 +1287,12 @@ ClosedNetwork <- function(serv.distr, s, p, staClients, nClients, transitions, h
   nodes <- length(s)
   maxserv <- max(s)
   map <- function(f) {f(staClients+transitions)}
-  tServ <- matrix(sapply(lapply(serv.distr, r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=nodes )
+  tServ <- matrix(sapply(lapply(serviceDistribution, r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=nodes )
   iServ <- rep(1, nodes)
   rand <- r(Unif()) (staClients+transitions)
   simClients <- 0
   
-  obj <- list(Serv.distr=serv.distr, Servs= s, Prob=p, Nclients=nClients)
+  obj <- list(serviceDistribution=serviceDistribution, Servs= s, Prob=p, Nclients=nClients)
   if (historic) hist <- array(dim=c(nodes, 4, transitions), dimnames=list(1:nodes, c("L", "Lq", "W","Wq"), 1:transitions))
   
   sysClients <- floor((nClients-1)*(s^(-1))/sum(s^-1))
@@ -1419,25 +1425,25 @@ ClosedNetwork <- function(serv.distr, s, p, staClients, nClients, transitions, h
   if (historic) {
     obj$out$historic <- hist
   }
-  oldClass(obj) <-  c("Closed", "SimulatedModel")
+  oldClass(obj) <-  c("Closed", "SimulatedNetwork", "SimulatedModel")
   
   return(obj)
 }
 
-exportToUI(ClosedNetwork, "Closed Network", c("Vdistr", "vector", "matrix", "numeric", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(ClosedNetwork, "Closed Network", c("Vdistr", "vector", "matrix", "numeric", "numeric", "numeric", "boolean"), c("Closed", "SimulatedNetwork", "SimulatedModel"))
 
 SON_Example <- function (sta, trans) {
   p <- matrix(c(0.2, 0.25, 0.1, 0), nrow=2, ncol=2)
   s <- c(1, 2)
-  arr.distr <- pairlist(c(Exp(20), Exp(30)), c(1,2))
-  serv.distr <- c(Exp(100), Exp(25))
-  OpenNetwork(arr.distr, serv.distr, s, p, sta, trans)
+  arrivalDistribution <- pairlist(c(Exp(20), Exp(30)), c(1,2))
+  serviceDistribution <- c(Exp(100), Exp(25))
+  OpenNetwork(arrivalDistribution, serviceDistribution, s, p, sta, trans)
 }
 
 #' Obtains the main characteristics of an Open Network model by simulation
 #'  
-#' @param arr.distr PairList indicating the arrival distribution and the node that uses it.
-#' @param serv.distr Vector of service distribution in each node
+#' @param arrivalDistribution PairList indicating the arrival distribution and the node that uses it.
+#' @param serviceDistribution Vector of service distribution in each node
 #' @param s Vector of servers in each node
 #' @param p Routing matrix, where \eqn{p_{ij}} is the routing probability from node i to node j
 #' @param staClients Number of customers used in the stabilization stage
@@ -1458,9 +1464,9 @@ SON_Example <- function (sta, trans) {
 #' @family SimulatedModels
 
          
-OpenNetwork <- function(arr.distr, serv.distr, s, p, staClients, transitions, historic=FALSE) {
-  if (!belong(serv.distr, "distr")) stop("All elements in argument 'serv.distr'must be a valid Class of the Distr package")
-  if (!belong(arr.distr[[1]], "distr")) stop("All elements in first position of argument 'serv.distr'must be a valid Class of the Distr package")
+OpenNetwork <- function(arrivalDistribution, serviceDistribution, s, p, staClients, transitions, historic=FALSE) {
+  if (!belong(serviceDistribution, "distr")) stop("All elements in argument 'serviceDistribution'must be a valid Class of the Distr package")
+  if (!belong(arrivalDistribution[[1]], "distr")) stop("All elements in first position of argument 'serviceDistribution'must be a valid Class of the Distr package")
   if (any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
   if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
   if (transitions <= 0) stop("Argument 'transitions' must be greather than 0.")
@@ -1471,19 +1477,19 @@ OpenNetwork <- function(arr.distr, serv.distr, s, p, staClients, transitions, hi
   p <- matrix(c(1-rowSums(p), as.vector(p)), nrow=nrow(p), ncol=ncol(p)+1)
   #raux <- function(v) {if (is.na(v)) return(NA) else return(r(v))}
   map <- function(f) {f((staClients+transitions)*2)}
-  tServ <- matrix(sapply(lapply(serv.distr, r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=nodes )
-  tArr <- matrix(sapply(lapply(arr.distr[[1]], r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=length(arr.distr[[2]]), dimnames=list(1:((staClients+transitions)*2), arr.distr[[2]]))
+  tServ <- matrix(sapply(lapply(serviceDistribution, r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=nodes )
+  tArr <- matrix(sapply(lapply(arrivalDistribution[[1]], r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=length(arrivalDistribution[[2]]), dimnames=list(1:((staClients+transitions)*2), arrivalDistribution[[2]]))
   iServ <- rep(1, nodes)
   iArr <- rep(1, nodes)
   rand <- r(Unif()) ((staClients+transitions)*2)
   irand <- 1
   simClients <- 0
   
-  obj <- list(Serv.distr=serv.distr, Servs= s, Prob=p)
+  obj <- list(serviceDistribution=serviceDistribution, Servs= s, Prob=p)
   if (historic) hist <- array(dim=c(nodes, 4, transitions), dimnames=list(1:nodes, c("L", "Lq", "W","Wq"), 1:transitions))
   
   a <- array(NA, dim=nodes)
-  for(i in arr.distr[[2]]) {
+  for(i in arrivalDistribution[[2]]) {
     a[i] <- tArr[iArr[i], as.character(i)]
     iArr[i] <- iArr[i] + 1
   }
@@ -1676,12 +1682,12 @@ OpenNetwork <- function(arr.distr, serv.distr, s, p, staClients, transitions, hi
   if (historic) {
     obj$out$Historic <- hist
   }
-  oldClass(obj) <-  c("Open", "SimulatedModel")
+  oldClass(obj) <-  c("Open", "SimulatedNetwork", "SimulatedModel")
   
   return(obj)
 }
 
-exportToUI(OpenNetwork, "Open Network", c("Vdistr", "distr", "vector", "matrix", "numeric", "numeric", "boolean"), "simulation")
+exportToUI(OpenNetwork, "Open Network", c("Vdistr", "distr", "vector", "matrix", "numeric", "numeric", "boolean"),  c("Open", "SimulatedNetwork", "SimulatedModel"))
 
 #' Print the main characteristics of a SimulatedModel object
 #' @param x SimulatedModel object
@@ -1695,30 +1701,17 @@ print.SimulatedModel <- function(x, ...) {
   cat("Lq =\t", x$out$lq, "\tWq =\t", x$out$wq, "\tEficiencia =\t", x$out$eff, "\n\n")
 }
 
-#' Print the main characteristics of a Closed object
-#' @param x Closed object
+#' Print the main characteristics of a SimulatedNetwork object
+#' @param x SimulatedNetwork object
 #' @param ... Further arguments passed to or from other methods.
-#' @method print Closed
+#' @method print SimulatedNetwork
 #' @keywords internal
 #' @export
-print.Closed <- function(x, ...) {
+print.SimulatedNetwork <- function(x, ...) {
   cat("Model: ", class(x)[1], "\n")
   cat("\nL =\t", x$out$l, "\tW =\t", x$out$w, "\t\tIntensidad =\t", x$out$rho , "\n")
   cat("Lq =\t", x$out$lq, "\tWq =\t", x$out$wq, "\tEficiencia =\t", x$out$eff, "\n\n")
   cat("LqT: ", x$out$lqt, "\n")
-}
-
-#' Print the main characteristics of a Open object
-#' @param x Open object
-#' @param ... Further arguments passed to or from other methods.
-#' @method print Open
-#' @keywords internal
-#' @export
-print.Open <- function(x, ...) {
-  cat("Model: ", class(x)[1], "\n")
-  cat("\nL =\t", x$out$l, "\tW =\t", x$out$w, "\t\tIntensidad =\t", x$out$rho , "\n")
-  cat("Lq =\t", x$out$lq, "\tWq =\t", x$out$wq, "\tEficiencia =\t", x$out$eff, "\n\n")
-  cat("LqT: ", x$out$Lqt, "\n")
 }
 
 #' Shows the main graphics of the parameters of a Simulated Model
@@ -1745,4 +1738,44 @@ summary.SimulatedModel <- function(object, range=NULL, ...) {
   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"Lq"], type="l")
   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"W"], type="l")
   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"Wq"], type="l")
+}
+
+#' Shows a plot of the evolution of L and Lq during the simulation
+#' 
+#' @param object Simulated Model
+#' @param minrange Start client of simulation
+#' @param maxrange Last client of simulation
+#' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
+#' @export
+summaryllq <- function(object, minrange, maxrange, graphics="ggplot2") {
+  if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
+  data <- data.frame(n=minrange:maxrange, "L"=object$out$historic[minrange:maxrange, "L"], "Lq"=object$out$historic[minrange:maxrange, "Lq"])
+  switch(graphics,
+        "graphics" =  {plot(data$n, data$L, col="red", type="l")
+                       lines(data$n, data$Lq, col="blue")
+                       legend("bottomright", c("L", "Lq"), lty =c(1,1), col = c("red", "blue"), bty="n")
+                       title(main=paste("Evolution of L and Lq", sep=""))},
+         "ggplot2" = {data <- melt(data, id.var="n")
+                      qplot(n, value, data=data, geom="line", colour=variable, 
+                      main="Evolution of L and Lq.", ylab="Mean customers")})
+}
+
+#' Shows a plot of the evolution of W and Wq during the simulation
+#' 
+#' @param object Simulated Model
+#' @param minrange Start client of simulation
+#' @param maxrange Last client of simulation
+#' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
+#' @export
+summarywwq <- function(object, minrange, maxrange, graphics="ggplot2") {
+  if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
+  data <- data.frame(n=minrange:maxrange, "W"=object$out$historic[minrange:maxrange, "W"], "Wq"=object$out$historic[minrange:maxrange, "Wq"])
+  switch(graphics,
+         "graphics" =  {plot(data$n, data$W, col="red", type="l")
+                        lines(data$n, data$Wq, col="blue")
+                        legend("bottomright", c("W", "Wq"), lty =c(1,1), col = c("red", "blue"), bty="n")
+                        title(main=paste("Evolution of W and Wq", sep=""))},
+         "ggplot2" = {data <- melt(data, id.var="n")
+                      qplot(n, value, data=data, geom="line", colour=variable, 
+                            main="Evolution of W and Wq.", ylab="Mean time")})
 }
