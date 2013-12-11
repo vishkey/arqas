@@ -78,8 +78,6 @@ OpenJacksonNetwork <- function(lambda=c(20, 30), mu=c(100, 25), s=c(1,2), p=matr
   return(obj)    
 }
 
-exportToUI(OpenJacksonNetwork, "Open Jackson Network", c("vector", "vector", "vector", "matrix"), c("OpenJackson", "Network", "MarkovianModel"))
-
 #' Data for a Open Network Example
 #' 
 #' @return The solution of the example
@@ -294,8 +292,6 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0
   oldClass(obj) <- c("ClosedJackson", "Network", "MarkovianModel")
   return(obj)
 }
-
-exportToUI(ClosedJacksonNetwork, "Closed Jackson Network",  c("vector", "vector", "matrix", "numeric"),  c("ClosedJackson", "Network", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn ClosedJackson

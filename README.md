@@ -1,4 +1,0 @@
-Arcas
-=====
-
-Queueuing Analizer

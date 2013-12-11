@@ -35,8 +35,6 @@ M_M_1 <- function(lambda=3, mu=6) {
   return(obj)        
 }
 
-exportToUI(M_M_1, "M/M/1", c("numeric", "numeric"), c("M_M_1", "M_M_S", "MarkovianModel"))
-
 #' @rdname Pn
 #' @method Pn M_M_1
 #' @details
@@ -123,8 +121,6 @@ M_M_S <- function (lambda=3, mu=6, s=2) {
   obj$out <- list(rho = rho, barrho=rho, cn = cn, p0 = p0, l=l, lq=lq, wq=wq, w=w, eff=eff)
   return(obj)        
 }
-
-exportToUI(M_M_S, "M/M/s", c("numeric", "numeric", "numeric"), c("M_M_S", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_S
@@ -224,8 +220,6 @@ M_M_1_K <- function(lambda=3, mu=6, k=2) {
   obj$out <- list(rho = rho, barrho = barrho, barlambda = barlambda, l=l, lq=lq, wq=wq, w=w, eff=eff)
   return(obj)
 }
-
-exportToUI(M_M_1_K, "M/M/1/K", c("numeric", "numeric", "numeric"), c("M_M_1_K", "M_M_S_K", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_1_K
@@ -371,8 +365,6 @@ M_M_S_K <- function(lambda=3, mu=6, s=2, k=3)  {
   obj$out <- list(rho = rho, barrho = barrho, barlambda = barlambda, cn = cn, p0 = p0, pks = pks, l=l, lq=lq, wq=wq, w=w, eff=eff)
   return(obj)
 }
-
-exportToUI(M_M_S_K, "M/M/s/K", c("numeric", "numeric", "numeric", "numeric"), c("M_M_S_K", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_S_K

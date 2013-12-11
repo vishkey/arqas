@@ -4,7 +4,7 @@
 \usage{
   G_G_1(arrivalDistribution = Exp(1),
     serviceDistribution = Exp(1), staClients = 100,
-    nClients = 1000, historic = FALSE)
+    nClients = 1000, historic = FALSE, nsim = 1, nproc = 1)
 }
 \arguments{
   \item{arrivalDistribution}{Arrival distribution}
@@ -19,6 +19,11 @@
 
   \item{historic}{Parameter used to activate/deactivate the
   historic information}
+
+  \item{nsim}{Number of simulations to do}
+
+  \item{nproc}{Number of processors to use in the
+  simulation.}
 }
 \value{
   Returns the next information of a G/G/1 model:

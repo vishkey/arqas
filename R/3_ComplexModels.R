@@ -48,8 +48,6 @@ M_M_1_INF_H <- function(lambda=3, mu=6, h=5) {
   return(obj)
 }
 
-exportToUI(M_M_1_INF_H, "M/M/1/INF/H", c("numeric", "numeric", "numeric"), c("M_M_1_INF_H", "M_M_S_INF_H", "MarkovianModel"))
-
 #' @rdname Pn
 #' @method Pn M_M_1_INF_H
 #' @details
@@ -160,8 +158,6 @@ M_M_S_INF_H <- function(lambda=3, mu=6, s=3, h=5) {
   oldClass(obj) <- c("M_M_S_INF_H", oldClass(obj))
   return(obj)       
 }
-
-exportToUI(M_M_S_INF_H, "M/M/s/INF/H", c("numeric", "numeric", "numeric", "numeric"), c("M_M_S_INF_H", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_S_INF_H
@@ -316,8 +312,6 @@ M_M_S_INF_H_Y <- function(lambda=3, mu=6, s=3, h=5, y=3) {
   return(obj)
 }
 
-exportToUI(M_M_S_INF_H_Y, "M/M/s/INF/H with Y replacements", c("numeric", "numeric", "numeric", "numeric", "numeric"),  c("M_M_S_INF_H_Y", "M_M_S_INF_H", "MarkovianModel"))
-
 #' @rdname Pn
 #' @method Pn M_M_S_INF_H_Y
 #' @details
@@ -420,8 +414,6 @@ M_M_INF <- function(lambda=3, mu=6) {
   oldClass(obj) <- c("M_M_INF", oldClass(obj))
   return(obj)
 }
-
-exportToUI(M_M_INF, "M/M/INF", c("numeric", "numeric"),  c("M_M_INF", "MarkovianModel"))
 
 #' @rdname Pn
 #' @method Pn M_M_INF

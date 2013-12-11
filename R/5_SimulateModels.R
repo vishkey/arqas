@@ -20,6 +20,8 @@ belong <- function(obj, packagename) {
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
 #' @param historic Parameter used to activate/deactivate the historic information
+#' @param nsim Number of simulations to do
+#' @param nproc Number of processors to use in the simulation.
 #' @return
 #' Returns the next information of a G/G/1 model:
 #' \item{pn}{Stores all the positives steady-state probabilities of having n customers, with n from 0 to staClients+nClients}
@@ -33,89 +35,40 @@ belong <- function(obj, packagename) {
 #' @export
 #' @family SimulatedModels
 
-G_G_1 <- function(arrivalDistribution = Exp(1), serviceDistribution = Exp(1), staClients = 100, nClients = 1000, historic = FALSE) {
-      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
-      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-      if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
-      if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
-      
-      tArr <- r(arrivalDistribution) (staClients+nClients)
-      tServ <- r(serviceDistribution) (staClients+nClients)
-      iArr <- iServ <- 1
-      sysClients <- simClients<- 0
-      a <- 0
-      b <- -1
-      
-      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
-      if (historic) hist <- matrix(nrow=nClients, ncol=6, dimnames=list(1:nClients, c("L", "Lq", "W","Wq", "Clients", "Intensity")))
-      
-      while (simClients < staClients) {
-        if (sysClients > 0)
-          tMin <- min(a, b)
-        else
-          tMin <- a
-
-        if (tMin == a) {
-          simClients <- simClients + 1     
-          if (sysClients == 0) {
-            b <- tServ[iServ]
-            iServ <- iServ+1
-          } else
-            b <- b - tMin
-          a <- tArr[iArr]
-          iArr <- iArr + 1
-          sysClients <- sysClients+1
-        } else {
-          sysClients <- sysClients - 1
-          if (sysClients == 0) {
-            b <- -1
-          } else {
-            b <- tServ[iServ]
-            iServ <- iServ + 1
-          }
-          a <- a - tMin
-        }
-      }
-      simClients <- 0
-      cron <- d <- c <- 0
-      tnClients <- numeric(nClients)
-      actualper <- seq(0, 100, 10)
-      percentages <- (actualper*nClients)/100
-      iper <- 1 
-      while (simClients < nClients) {
-        if (simClients > percentages[iper]) {
-          iper <- iper+1
-          message(paste(actualper[iper], "%", sep=""))
-        }
-        if (sysClients > 0) {
-          tMin <- min(a, b)
-        }
-        else {
-          tMin <- a
-        }
-        cron <- cron + tMin
-        tnClients[sysClients+1] <- tnClients[sysClients+1] + tMin
-
+G_G_1 <- function(arrivalDistribution = Exp(1), serviceDistribution = Exp(1), staClients = 100, nClients = 1000, historic = FALSE, nsim=1, nproc=1) {
+      G_G_1_secuential <- function(arrivalDistribution, serviceDistribution, staClients, nClients, historic) {
+        if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+        if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
+        if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
+        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
         
-        if (tMin == a) {
-            simClients <- simClients + 1
+        tArr <- r(arrivalDistribution) (staClients+nClients)
+        tServ <- r(serviceDistribution) (staClients+nClients)
+        iArr <- iServ <- 1
+        sysClients <- simClients<- 0
+        a <- 0
+        b <- -1
+        
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
+        if (historic) hist <- matrix(nrow=nClients, ncol=6, dimnames=list(1:nClients, c("L", "Lq", "W","Wq", "Clients", "Intensity")))
+        
+        while (simClients < staClients) {
+          if (sysClients > 0)
+            tMin <- min(a, b)
+          else
+            tMin <- a
+  
+          if (tMin == a) {
+            simClients <- simClients + 1     
             if (sysClients == 0) {
-                b <- tServ[iServ]
-                iServ <- iServ+1
-            }
-            else {
-                c <- c + tMin*sysClients
-                d <- d + tMin*(sysClients-1)
-                b <- b - tMin
-            }
-            sysClients <- sysClients+1
+              b <- tServ[iServ]
+              iServ <- iServ+1
+            } else
+              b <- b - tMin
             a <- tArr[iArr]
             iArr <- iArr + 1
-        }
-        else {
-            c <- c + tMin*sysClients
-            d <- d + tMin*(sysClients-1)
-            
+            sysClients <- sysClients+1
+          } else {
             sysClients <- sysClients - 1
             if (sysClients == 0) {
               b <- -1
@@ -124,34 +77,104 @@ G_G_1 <- function(arrivalDistribution = Exp(1), serviceDistribution = Exp(1), st
               iServ <- iServ + 1
             }
             a <- a - tMin
+          }
         }
-        #En cada iteración almacenamos la evolucion de los valores
-        if (historic) {
-          l <- c/cron
-          lq <- d/cron
-          w <- c/nClients
-          wq <- d/nClients
+        simClients <- 0
+        cron <- d <- c <- 0
+        tnClients <- numeric(nClients)
+        actualper <- seq(0, 100, 10)
+        percentages <- (actualper*nClients)/100
+        iper <- 1 
+        while (simClients < nClients) {
+          if (simClients > percentages[iper]) {
+            iper <- iper+1
+            message(paste(actualper[iper], "%", sep=""))
+          }
+          if (sysClients > 0) {
+            tMin <- min(a, b)
+          }
+          else {
+            tMin <- a
+          }
+          cron <- cron + tMin
+          tnClients[sysClients+1] <- tnClients[sysClients+1] + tMin
   
-          hist[simClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+          
+          if (tMin == a) {
+              simClients <- simClients + 1
+              if (sysClients == 0) {
+                  b <- tServ[iServ]
+                  iServ <- iServ+1
+              }
+              else {
+                  c <- c + tMin*sysClients
+                  d <- d + tMin*(sysClients-1)
+                  b <- b - tMin
+              }
+              sysClients <- sysClients+1
+              a <- tArr[iArr]
+              iArr <- iArr + 1
+          }
+          else {
+              c <- c + tMin*sysClients
+              d <- d + tMin*(sysClients-1)
+              
+              sysClients <- sysClients - 1
+              if (sysClients == 0) {
+                b <- -1
+              } else {
+                b <- tServ[iServ]
+                iServ <- iServ + 1
+              }
+              a <- a - tMin
+          }
+          #En cada iteración almacenamos la evolucion de los valores
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/nClients
+            wq <- d/nClients
+    
+            hist[simClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+          }
         }
+        l <- c/cron
+        lq <- d/cron
+        w <- c/nClients
+        wq <- d/nClients
+        eff <- w/(w-wq)
+        rho <- l-lq
+        pn <- tnClients[1:max(which(tnClients>0))]/cron
+        if (historic)
+          obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+        else
+          obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+        oldClass(obj) <-  c("G_G_1", "SimulatedModel")
+        
+        return(obj)
+    }      
+    if (nproc > 1) {
+      cluster <- makeCluster(nproc)
+      registerDoParallel(cluster)
+      parallelRes <- foreach(nClients=rep(nClients, nsim), .packages="distr") %dopar% {
+        belong <- function(obj, packagename) {
+          if (length(obj) > 1)
+            packageobj <- sapply(lapply(obj, class), attr, "package")
+          else
+            packageobj <- attr(class(obj), "package")
+          
+          return(all(packageobj==packagename))
+        }
+        G_G_1_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)
       }
-      l <- c/cron
-      lq <- d/cron
-      w <- c/nClients
-      wq <- d/nClients
-      eff <- w/(w-wq)
-      rho <- l-lq
-      pn <- tnClients[1:max(which(tnClients>0))]/cron
-      if (historic)
-        obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-      else
-        obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-      oldClass(obj) <-  c("G_G_1", "SimulatedModel")
-      
-      return(obj)
+      stopCluster(cluster)
+      return(parallelRes)
+    }
+    res <- foreach(nClients=rep(nClients, nsim), .packages="distr") %do% {
+      G_G_1_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)
+    }
+    return(res)
 }
-
-exportToUI(G_G_1, "G/G/1",  c("distr", "distr", "numeric", "numeric", "boolean"),  c("G_G_1", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/s model by simulation
 #' 
@@ -312,8 +335,6 @@ G_G_S <- function (arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2, 
       return(obj)
 }
 
-exportToUI(G_G_S, "G/G/s", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"),  c("G_G_S", "SimulatedModel"))
-
 #'Obtains the main characteristics of a G/G/1/K model by simulation
 #' 
 #' @param arrivalDistribution Arrival distribution
@@ -452,8 +473,6 @@ G_G_1_K <- function (arrivalDistribution=Exp(1), serviceDistribution=Exp(1), K=2
       
       return(obj)
 }
-
-exportToUI(G_G_1_K, "G/G/1/K", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"), c("G_G_1_K", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/s/K model by simulation
 #' 
@@ -611,8 +630,6 @@ G_G_S_K <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2,
       return(obj)
 }
 
-exportToUI(G_G_S_K, "G/G/s/K",  c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "boolean"),  c("G_G_S_K", "SimulatedModel"))
-
 #' Obtains the main characteristics of a G/G/1/\eqn{\infty}/H model by simulation
 #' 
 #' @param arrivalDistribution Arrival distribution
@@ -756,8 +773,6 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), 
     oldClass(obj) <-  c("G_G_1_INF_H", "SimulatedModel")
     return(obj)
 }
-
-exportToUI(G_G_1_INF_H, "G/G/1/INF/H", c("distr", "distr", "numeric", "numeric", "numeric", "boolean"), c("G_G_1_INF_H", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H  model by simulation
 #' 
@@ -923,8 +938,6 @@ G_G_S_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), 
       close(progressbar)
       return(obj)
 }
-
-exportToUI(G_G_S_INF_H, "G/G/s/INF/H", c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "boolean"), c("G_G_S_INF_H", "SimulatedModel"))
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H with Y replacements model by simulation
 #' 
@@ -1110,8 +1123,6 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1)
   return(obj)
 }
 
-exportToUI(G_G_S_INF_H_Y, "G/G/s/INF/H with Y replacements", c("distr", "distr", "numeric", "numeric", "numeric", "numeric", "numeric", "boolean"),  c("G_G_S_INF_H_Y", "SimulatedModel"))
-
 #' Obtains the main characteristics of a G/G/\eqn{\infty} model by simulation
 #' 
 #' @param arrivalDistribution Arrival distribution
@@ -1242,8 +1253,6 @@ G_G_INF <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), staC
   
   return(obj)
 }
-
-exportToUI(G_G_INF, "G/G/INF", c("distr", "distr", "numeric","numeric", "boolean"),  c("G_G_INF", "SimulatedModel"))
 
 SCN_example <- function (sta, trans) {
   serviceDistribution <- c(Exp(5), Exp(5), Exp(10), Exp(15))
@@ -1429,8 +1438,6 @@ ClosedNetwork <- function(serviceDistribution, s, p, staClients, nClients, trans
   
   return(obj)
 }
-
-exportToUI(ClosedNetwork, "Closed Network", c("Vdistr", "vector", "matrix", "numeric", "numeric", "numeric", "boolean"), c("Closed", "SimulatedNetwork", "SimulatedModel"))
 
 SON_Example <- function (sta, trans) {
   p <- matrix(c(0.2, 0.25, 0.1, 0), nrow=2, ncol=2)
@@ -1687,7 +1694,15 @@ OpenNetwork <- function(arrivalDistribution, serviceDistribution, s, p, staClien
   return(obj)
 }
 
-exportToUI(OpenNetwork, "Open Network", c("Vdistr", "distr", "vector", "matrix", "numeric", "numeric", "boolean"),  c("Open", "SimulatedNetwork", "SimulatedModel"))
+#' @rdname Pn
+#' @method Pn SimulatedModel
+#' @details
+#' \code{Pn.SimulatedModel} implements the method for a SimulatedModel model
+#' @export
+Pn.SimulatedModel <- function(qm, n) {
+  ifelse(length(qm$out$pn) <= n, 0, qm$out$pn[n+1])
+}
+
 
 #' Print the main characteristics of a SimulatedModel object
 #' @param x SimulatedModel object
@@ -1759,6 +1774,8 @@ summaryllq <- function(object, minrange, maxrange, graphics="ggplot2") {
                       qplot(n, value, data=data, geom="line", colour=variable, 
                       main="Evolution of L and Lq.", ylab="Mean customers")})
 }
+
+
 
 #' Shows a plot of the evolution of W and Wq during the simulation
 #' 

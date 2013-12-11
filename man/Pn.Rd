@@ -11,6 +11,7 @@
 \alias{Pn.M_M_S_K}
 \alias{Pn.MarkovianModel}
 \alias{Pn.OpenJackson}
+\alias{Pn.SimulatedModel}
 \title{Steady-state probability of having n customers in the system}
 \usage{
   Pn(qm, n)
@@ -36,6 +37,8 @@
   \method{Pn}{OpenJackson} (qm, n)
 
   \method{Pn}{ClosedJackson} (qm, n)
+
+  \method{Pn}{SimulatedModel} (qm, n)
 }
 \arguments{
   \item{qm}{Queueing model}
@@ -85,5 +88,8 @@
   Closed Jackson Network model In this function n, should
   have the same length than the number of nodes in the
   network.
+
+  \code{Pn.SimulatedModel} implements the method for a
+  SimulatedModel model
 }
 

@@ -2,7 +2,7 @@
 #'
 #' Constructor for \code{MarkovianModel} class.
 #'
-#' @param arrdistr Arrival distribution (object of S4-class \code{distr} 
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
 #' defined in \pkg{distr} package)
 #' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
 #' defined in \pkg{distr} package)
@@ -144,58 +144,6 @@ print.MarkovianModel <- function(x, ...) {
   cat("\nL =\t", x$out$l, "\tW =\t", x$out$w, "\t\tIntensidad =\t", x$out$rho , "\n")
   cat("Lq =\t", x$out$lq, "\tWq =\t", x$out$wq, "\tEficiencia =\t", x$out$eff, "\n\n")
 }
-
-#' List of export models to the UI
-#' @export
-#' @keywords internal
-uiList <- list()
-
-#' List of registered distributions to the UI
-#' @export
-#' @keywords internal
-distrList <- list()
-
-#' Counter of exported funtions
-#' @keywords internal
-exportedFunctions <- 0
-
-#' Counter of registered distributions
-#' @keywords internal
-registeredDistributions <- 0
-
-#' Exports a function to the UI
-#' 
-#' @param fun Function of the model
-#' @param name Name of the model
-#' @param types Type of each parameter of the function (numerical, character, vector, matrix)
-#' @param class A string to agrupate funtions in the same menu option
-#' @export
-exportToUI <- function(fun, name, types, class) {
-  exportedFunctions <<- exportedFunctions + 1
-  
-  el <- list(id=exportedFunctions, name=name, fun=fun, types=types)
-  oldClass(el) <- class
-  uiList[[exportedFunctions]] <<- el
-}
-
-#' Register a distribution to the UI
-#' 
-#' @param fun Function of the distribution
-#' @param name Name of the distribution
-#' @export
-registerDistribution <- function(fun, name) {
-  registeredDistributions <<- registeredDistributions + 1
-  
-  el <- list(id=registeredDistributions, name=name, fun=fun)
-  distrList[[registeredDistributions]] <<- el
-}
-
-registerDistribution(Exp, "Exponential")
-registerDistribution(Beta, "Beta")
-registerDistribution(Norm, "Normal")
-registerDistribution(Weibull, "Weibull")
-registerDistribution(Unif, "Uniform")
-registerDistribution(Chisq, "Chi Square")
 
 #' Shows the main graphics of the parameters of a Markovian Model
 #' 

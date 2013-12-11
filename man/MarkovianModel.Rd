@@ -6,8 +6,8 @@
     serviceDistribution = Exp(1))
 }
 \arguments{
-  \item{arrdistr}{Arrival distribution (object of S4-class
-  \code{distr} defined in \pkg{distr} package)}
+  \item{arrivalDistribution}{Arrival distribution (object
+  of S4-class \code{distr} defined in \pkg{distr} package)}
 
   \item{serviceDistribution}{Service distribution (object
   of S4-class \code{distr} defined in \pkg{distr} package)}
