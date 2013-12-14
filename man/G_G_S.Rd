@@ -2,9 +2,9 @@
 \alias{G_G_S}
 \title{Obtains the main characteristics of a G/G/s model by simulation}
 \usage{
-  G_G_S(arrivalDistribution = Exp(1),
-    serviceDistribution = Exp(1), s = 2, staClients = 100,
-    nClients = 1000, historic = FALSE)
+  G_G_S(arrivalDistribution = Exp(3),
+    serviceDistribution = Exp(6), s = 2, staClients = 100,
+    nClients = 1000, historic = FALSE, nsim = 1, nproc = 1)
 }
 \arguments{
   \item{arrivalDistribution}{Arrival distribution}

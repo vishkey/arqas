@@ -73,6 +73,7 @@ Qn <- function(qm, n) {UseMethod("Qn", qm)}
 #' @param net Network
 #' @param i Node
 #' @return \deqn{P_{0,i}()}
+#' @export
 P0i <- function(net, i) {UseMethod("P0i", net)}
 
 #' Steady-state probability of i customers in the system on the node 0 of an Open Jackson Network.
@@ -195,7 +196,7 @@ summaryWtWqt <- function(object, t, graphics="ggplot2") {
                   data <- melt(data, id.var="t") 
                   qplot(t, value, data=data, geom="line", colour=variable, 
                         main=paste("Distribution functions of waiting times (t from ", data$t[1], " to ", data$t[length(data$t)], ")", sep=""),
-                        ylab="Cumulative Probability")
+                        ylab="Cumulative Probability") + scale_colour_discrete(name="")
            })
   })
 }
@@ -222,12 +223,12 @@ summaryPnQn <- function(object, n, graphics="ggplot2") {
                data <- melt(data.frame(n, "Pn"=Pn(object, n), "Qn"=Qn(object, n)), id.var="n")
               qplot(n, value, data=data, geom="bar", stat="identity", fill=variable, position="dodge",
                     main=paste("Probability of n customers (n from ", n[1], " to ", n[length(n)], ")", sep=""),
-                    ylab="Probabilities")
+                    ylab="Probabilities") + scale_fill_discrete(name="")
              }, error= function(e) {
                  data <- melt(data.frame(n, "Pn"=Pn(object, n)), id.var="n")
                  qplot(n, value, data=data, geom="bar", stat="identity", fill=variable,
                        main=paste("Probability of n customers (n from ", n[1], " to ", n[length(n)], ")", sep=""),
-                       ylab="Probability")
+                       ylab="Probability") + scale_fill_discrete(name="")
              })
          })
 }

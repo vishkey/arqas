@@ -1,8 +1,8 @@
 Package: arqas
 Type: Package
 Title: Aplication in R for Queueing Analisis and Simulation
-Version: 1.11
-Date: 01-09-2013
+Version: 1.12
+Date: 14-12-2013
 Author: Borja Varela
 Maintainer: Borja Varela <borja.varela@udc.es>
 Depends: R (>= 1.8.0), distr, reshape, ggplot2, doParallel, foreach

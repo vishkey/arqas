@@ -2,9 +2,9 @@
 \alias{G_G_1_K}
 \title{Obtains the main characteristics of a G/G/1/K model by simulation}
 \usage{
-  G_G_1_K(arrivalDistribution = Exp(1),
-    serviceDistribution = Exp(1), K = 2, staClients = 100,
-    nClients = 1000, historic = FALSE)
+  G_G_1_K(arrivalDistribution = Exp(3),
+    serviceDistribution = Exp(6), K = 2, staClients = 100,
+    nClients = 1000, historic = FALSE, nsim = 1, nproc = 1)
 }
 \arguments{
   \item{arrivalDistribution}{Arrival distribution}

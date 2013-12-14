@@ -2,8 +2,8 @@
 \alias{G_G_1}
 \title{Obtains the main characteristics of a G/G/1 model by simulation}
 \usage{
-  G_G_1(arrivalDistribution = Exp(1),
-    serviceDistribution = Exp(1), staClients = 100,
+  G_G_1(arrivalDistribution = Exp(3),
+    serviceDistribution = Exp(6), staClients = 100,
     nClients = 1000, historic = FALSE, nsim = 1, nproc = 1)
 }
 \arguments{

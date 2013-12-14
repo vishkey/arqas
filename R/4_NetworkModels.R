@@ -240,9 +240,6 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0
   A <- aux[,-1]
   B <- -aux[,1]
   
-  if (abs(det(A)) <= (.Machine$double.eps ^ 0.5)) {
-    stop("Not stationary system")
-  }
   obj$lambda <- lambda <- c(1, solve(A, B))
   rho <- lambda/mu
   obj$out$rho <- rho
