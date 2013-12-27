@@ -2,8 +2,11 @@
 \alias{OpenNetwork}
 \title{Obtains the main characteristics of an Open Network model by simulation}
 \usage{
-  OpenNetwork(arrivalDistribution, serviceDistribution, s,
-    p, staClients, transitions, historic = FALSE)
+  OpenNetwork(arrivalDistribution = pairlist(c(Exp(20), Exp(30)), c(1, 2)),
+    serviceDistribution = c(Exp(100), Exp(25)),
+    s = c(1, 2),
+    p = matrix(c(0.2, 0.25, 0.1, 0), nrow = 2, ncol = 2),
+    staClients = 100, transitions = 1000, historic = FALSE)
 }
 \arguments{
   \item{arrivalDistribution}{PairList indicating the

@@ -2,9 +2,10 @@
 \alias{G_G_S_INF_H_Y}
 \title{Obtains the main characteristics of a G/G/S/\eqn{\infty}/H with Y replacements model by simulation}
 \usage{
-  G_G_S_INF_H_Y(arrivalDistribution = Exp(1),
-    serviceDistribution = Exp(1), s = 2, H = 2, Y = 3,
-    staClients = 100, nClients = 1000, historic = FALSE)
+  G_G_S_INF_H_Y(arrivalDistribution = Exp(3),
+    serviceDistribution = Exp(6), s = 3, H = 5, Y = 3,
+    staClients = 100, nClients = 1000, historic = FALSE,
+    nsim = 1, nproc = 1)
 }
 \arguments{
   \item{arrivalDistribution}{Arrival distribution}

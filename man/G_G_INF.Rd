@@ -2,9 +2,9 @@
 \alias{G_G_INF}
 \title{Obtains the main characteristics of a G/G/\eqn{\infty} model by simulation}
 \usage{
-  G_G_INF(arrivalDistribution = Exp(1),
-    serviceDistribution = Exp(1), staClients = 100,
-    nClients = 1000, historic = FALSE)
+  G_G_INF(arrivalDistribution = Exp(3),
+    serviceDistribution = Exp(6), staClients = 100,
+    nClients = 1000, historic = FALSE, nsim = 1, nproc = 1)
 }
 \arguments{
   \item{arrivalDistribution}{Arrival distribution}

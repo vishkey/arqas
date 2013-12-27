@@ -2,8 +2,11 @@
 \alias{ClosedNetwork}
 \title{Obtains the main characteristics of a Closed Network model by simulation}
 \usage{
-  ClosedNetwork(serviceDistribution, s, p, staClients,
-    nClients, transitions, historic = FALSE)
+  ClosedNetwork(serviceDistribution = c(Exp(5), Exp(5), Exp(10), Exp(15)),
+    s = c(2, 2, 1, 1),
+    p = array(c(0.25, 0.15, 0.5, 0.4, 0.15, 0.35, 0.25, 0.3, 0.2, 0.2, 0.15, 0.25, 0.4, 0.3, 0.1, 0.05), dim = c(4, 4)),
+    staClients = 100, nClients = 3, transitions = 1000,
+    historic = FALSE)
 }
 \arguments{
   \item{serviceDistribution}{Service distributions for the

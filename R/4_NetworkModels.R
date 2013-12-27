@@ -282,10 +282,6 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0
   obj$out$lq <- as.numeric(nodes[, "Lq"])
   obj$out$w <- as.numeric(nodes[, "W"])
   obj$out$wq <- as.numeric(nodes[, "Wq"])
-  obj$out$lqt <- sum(obj$out$lq)
-  obj$out$lt <- sum(obj$out$l)
-  obj$out$wt <- obj$out$lt/sum(obj$lambda)
-  obj$out$wqt <- obj$out$lqt/sum(obj$lambda)
   oldClass(obj) <- c("ClosedJackson", "Network", "MarkovianModel")
   return(obj)
 }
@@ -321,10 +317,9 @@ Pi.ClosedJackson <- function(net, n, node) {
     #Desplazamos los valores necesarios de la solucion parcial
     net$out$rho <- net$out$rho[shift]
     net$servers <- net$servers[shift]
-  }
-  
-  g <- calculateG(net)
-  return((f_close(net, net$k, n) * g[net$k-1, net$n-n+1])/g[net$k, net$n+1])      
+  } 
+  g <- calculateG(net) 
+  return(c((f_close(net, net$k, n[n<=net$n]) * g[net$k-1, net$n-n[n<=net$n]+1])/g[net$k, net$n+1], rep(0, length(n[n>net$n]))))      
 }
 
 print.OpenJackson <- function(x, ...) {
@@ -335,6 +330,6 @@ print.OpenJackson <- function(x, ...) {
 
 print.ClosedJackson <- function(x, ...) {
   cat("Model: ", class(x)[1], "\n")
-  aux <- matrix(c(x$out$l, x$out$lt, x$out$lq, x$out$lqt, x$out$w, x$out$wt, x$out$wq, x$out$wqt), ncol=4, dimnames=list(c(as.character(1:x$k), "Total"), c("L", "Lq", "W", "Wq")))
+  aux <- matrix(c(x$out$l, x$out$lq, x$out$w, x$out$wq), ncol=4, dimnames=list(as.character(1:x$k), c("L", "Lq", "W", "Wq")))
   print(aux)
 }

@@ -28,12 +28,13 @@ combineSimulations <- function(...) {
   rho <- sapply(args, getRho)
   eff <- sapply(args, getEff)
   res <- args[[1]]
-  res$out$l <- list(mean=mean(l), var=var(l))
-  res$out$lq <- list(mean=mean(lq), var=var(lq))
-  res$out$w <- list(mean=mean(w), var=var(w))
-  res$out$wq <- list(mean=mean(wq), var=var(wq))
-  res$out$rho <- list(mean=mean(rho), var=var(rho))
-  res$out$eff <- list(mean=mean(eff), var=var(eff))
+  k <- 2/sqrt(length(args))
+  res$out$l <- list(mean=mean(l), error=k*sd(l))
+  res$out$lq <- list(mean=mean(lq), error=k*sd(lq))
+  res$out$w <- list(mean=mean(w), error=k*sd(w))
+  res$out$wq <- list(mean=mean(wq), error=k*sd(wq))
+  res$out$rho <- list(mean=mean(rho), error=k*sd(rho))
+  res$out$eff <- list(mean=mean(eff), error=k*sd(eff))
   return(res)
 }
 
@@ -72,9 +73,9 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
         sysClients <- simClients<- 0
         a <- 0
         b <- -1
-        
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
-        if (historic) hist <- matrix(nrow=nClients, ncol=6, dimnames=list(1:nClients, c("L", "Lq", "W","Wq", "Clients", "Intensity")))
+        cron <- d <- c <- 0
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Staclients=staClients, Nclients=nClients)
+        if (historic) hist <- matrix(nrow=(staClients+nClients), ncol=6, dimnames=list(1:(staClients+nClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
         
         while (simClients < staClients) {
           if (sysClients > 0)
@@ -82,17 +83,24 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
           else
             tMin <- a
   
+          cron <- cron + tMin
+          
           if (tMin == a) {
             simClients <- simClients + 1     
             if (sysClients == 0) {
               b <- tServ[iServ]
               iServ <- iServ+1
-            } else
+            } else {
+              c <- c + tMin*sysClients
+              d <- d + tMin*(sysClients-1)
               b <- b - tMin
+            }
             a <- tArr[iArr]
             iArr <- iArr + 1
             sysClients <- sysClients+1
           } else {
+            c <- c + tMin*sysClients
+            d <- d + tMin*(sysClients-1)
             sysClients <- sysClients - 1
             if (sysClients == 0) {
               b <- -1
@@ -102,18 +110,19 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
             }
             a <- a - tMin
           }
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            
+            hist[simClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+          }
         }
         simClients <- 0
         cron <- d <- c <- 0
         tnClients <- numeric(nClients)
-        actualper <- seq(0, 100, 10)
-        percentages <- (actualper*nClients)/100
-        iper <- 1 
         while (simClients < nClients) {
-          if (simClients > percentages[iper]) {
-            iper <- iper+1
-            message(paste(actualper[iper], "%", sep=""))
-          }
           if (sysClients > 0) {
             tMin <- min(a, b)
           }
@@ -156,10 +165,10 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
           if (historic) {
             l <- c/cron
             lq <- d/cron
-            w <- c/nClients
-            wq <- d/nClients
+            w <- c/simClients
+            wq <- d/simClients
     
-            hist[simClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+            hist[simClients+staClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
           }
         }
         l <- c/cron
@@ -237,9 +246,9 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
         sysClients <- simClients<- 0
         cron <- d <- c <- 0
        
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Nclients=nClients)
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Staclients=staClients, Nclients=nClients)
         tnClients <- numeric(nClients)
-        if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
+        if (historic) hist <- matrix(nrow=(staClients+nClients), ncol=6, dimnames=list(1:(staClients+nClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
         
         while(simClients < staClients) {
           if (sysClients > 0) {
@@ -252,7 +261,9 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
           
           if (tmin == tArr[iArr]) {
             simClients <- simClients + 1
+            cron <- cron + tmin
             iArr <- iArr + 1    
+            c <- c + tmin*sysClients  
             #if exists any server free
             if (sysClients < s) {
               sysClients <- sysClients + 1
@@ -263,12 +274,19 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
               iServ <- iServ+1
               bussyservs <- c(bussyservs, iServ)
             } else {
+              d <- d + tmin*(sysClients-s)
               sysClients <- sysClients + 1
               if (length(bussyservs) > 0)
                 tServ[bussyservs] <- tServ[bussyservs] - tmin
             }
           }else {
             finishserver <- which.min(tServ[bussyservs])
+            cron <- cron + tmin
+            c <- c + tmin*sysClients
+            
+            if (sysClients > s)
+              d <- d + tmin*(sysClients-s)
+            
             sysClients <- sysClients-1
             if (length(bussyservs) > 0)
               tServ[bussyservs] <- tServ[bussyservs] - tmin
@@ -280,8 +298,18 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
             }
             tArr[iArr] <- tArr[iArr] - tmin
           }
+          
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            
+            hist[simClients, ] <- c(l,lq,w,wq, sysClients, (l-lq)/s)
+          }
         }
         simClients <- 0
+        cron <- d <- c <- 0
         while(simClients < nClients) {
           #print(bussyservs)
           #Check what type of event happen
@@ -338,10 +366,10 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
           if (historic) {
             l <- c/cron
             lq <- d/cron
-            w <- c/nClients
-            wq <- d/nClients
+            w <- c/simClients
+            wq <- d/simClients
             
-            hist[simClients, ] <- c(l,lq,w,wq)
+            hist[simClients+staClients, ] <- c(l,lq,w,wq,sysClients, (l-lq)/s)
           }
         }
         l <- c/cron
@@ -418,8 +446,8 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
         cron <- d <- c <- 0
         tnClients <- numeric(nClients)
         
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
-        if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Staclients=staClients, Nclients=nClients)
+        if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=6, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
         
         while(simClients < staClients) {
           
@@ -431,19 +459,29 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
           
           
           if(tmin == tArr[iArr]) {
+            cron <- cron + tmin
             iArr <- iArr + 1
             
             if (sysClients == (K+1)) {
               tServ[iServ] <- tServ[iServ] - tmin
+              c <- c + tmin*sysClients
+              d <- d + tmin*(sysClients-1)
               
             } else {
               simClients <- simClients + 1
-              if (sysClients == 0)ciServ <- iServ + 1
-              else tServ[iServ] <- tServ[iServ] - tmin
+              if (sysClients == 0) iServ <- iServ + 1
+              else {
+                c <- c+tmin*sysClients
+                d <- d+tmin*(sysClients-1)
+                tServ[iServ] <- tServ[iServ] - tmin
+              }
     
               sysClients <- sysClients + 1
             }
           } else {
+            cron <- cron + tmin
+            c <- c + tmin*sysClients
+            d <- d + tmin*(sysClients-1)
             sysClients <- sysClients - 1
             
             if(sysClients != 0) {
@@ -451,9 +489,17 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
             }
             tArr[iArr] <- tArr[iArr] - tmin
           }
+          
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            hist[simClients, ] <- c(l,lq,w,wq, sysclients, l-lq)
+          }
         }
         simClients <- 0
-        
+        cron <- c <- d <- 0
         while(simClients < nClients) {
           
           if (sysClients > 0) {
@@ -476,14 +522,13 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
             } else {
               simClients <- simClients + 1
               if (sysClients == 0) {
-                sysClients <- sysClients + 1
                 iServ <- iServ + 1
               } else {
                 c <- c+tmin*sysClients
                 d <- d+tmin*(sysClients-1)
-                sysClients <- sysClients + 1
                 tServ[iServ] <- tServ[iServ] - tmin
               }
+              sysClients <- sysClients + 1
             }
           } else {
             cron <- cron + tmin
@@ -501,9 +546,9 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
           if (historic) {
             l <- c/cron
             lq <- d/cron
-            w <- c/nClients
-            wq <- d/nClients
-            hist[simClients, ] <- c(l,lq,w,wq)
+            w <- c/simClients
+            wq <- d/simClients
+            hist[(simClients+staClients), ] <- c(l,lq,w,wq, sysClients, l-lq)
           }
         }
         l <- c/cron
@@ -582,9 +627,9 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
         sysClients <- simClients<- 0
         cron <- d <- c <- 0
         
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Nclients=nClients)
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Staclients=staClients,  Nclients=nClients)
         tnClients <- numeric(nClients)
-        if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
+        if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=6, dimnames=list(1:(staClients+nClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
         
         while(simClients < staClients) {
           indice_min_b <- which.min(bussyservers)
@@ -595,8 +640,11 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
             tmin <- tArr[iArr]
           
           if (tmin == tArr[iArr]) {
+            cron <- cron + tmin
+            iArr <- iArr + 1
+            c <- c + tmin*sysClients
             if(sysClients == (K+s)){
-              iArr <- iArr + 1
+              d <- d + tmin*(sysClients-s)
               bussyservers <- bussyservers-tmin
             } else {
               simClients <- simClients + 1
@@ -607,12 +655,17 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
                 bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
                 iServ <- iServ + 1
               } else {
+                d <- d + tmin*(sysClients-s)
                 sysClients <- sysClients + 1
-                iArr <- iArr + 1
                 bussyservers <- bussyservers-tmin
               }
             }
           } else {
+            cron <- cron + tmin
+            c <- c + tmin*sysClients
+            if (sysClients > s)
+              d <- d + tmin*(sysClients-s)
+            
             sysClients <- sysClients - 1
           
             bussyservers <- bussyservers-tmin
@@ -624,9 +677,17 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
             }
             tArr[iArr] <- tArr[iArr] - tmin
           }
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            
+            hist[simClients, ] <- c(l,lq,w,wq, sysClients, (l-lq)/s)
+          }
         }
         simClients <- 0
-        
+        cron <- c <- d <- 0
         while(simClients < nClients) {
           indice_min_b <- which.min(bussyservers)
           
@@ -679,10 +740,10 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
           if (historic) {
             l <- c/cron
             lq <- d/cron
-            w <- c/nClients
-            wq <- d/nClients
+            w <- c/simClients
+            wq <- d/simClients
             
-            hist[simClients, ] <- c(l,lq,w,wq)
+            hist[simClients+staClients, ] <- c(l,lq,w,wq, sysClients, (l-lq)/s)
           }
         }
         l <- c/cron
@@ -744,127 +805,165 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
 #' @export
 #' @family SimulatedModels
 
-G_G_1_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), H=2, staClients=100, nClients=1000, historic=FALSE) {
-    if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
-    if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-    if (H <= 0) stop("Argument 'H' must be greather than 0.")
-    if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
-    if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
-    
-    tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
-    tServ <- r(serviceDistribution) ((nClients+staClients)*2)
-    possibleClients <- tArr[1:H]
-    iServ <- 1
-    iArr <- H+1
-    sysClients <- 0
-    simClients <- 0
-    
-    obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, H=H, Nclients=nClients)
-    tnClients <- numeric(nClients)
-    if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
-    
-    while(simClients < staClients) {
-      indice_minimo_a <- which.min(possibleClients)
-      
-      if(sysClients>0)
-        minimo<-min(possibleClients[indice_minimo_a], tServ[iServ])
-      else
-        minimo<-possibleClients[indice_minimo_a]
-      
-      if (length(indice_minimo_a) == 0 || minimo==tServ[iServ]) {
-        sysClients <- sysClients-1
-        if (sysClients==0)
-          tServ[iServ] <- -1
-        else
-          iServ <- iServ + 1
-        possibleClients<-possibleClients-minimo
-        possibleClients[which(is.na(possibleClients))]<- tArr[iArr]
-        iArr <- iArr+1
-      } else {
-        simClients<-simClients+1
+G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), H=5, staClients=100, nClients=1000, historic=FALSE, nsim=1, nproc=1) {
+    G_G_1_INF_H_secuential <- function(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic) {
+        if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+        if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
+        if (H <= 0) stop("Argument 'H' must be greather than 0.")
+        if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
+        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
         
-        if(sysClients==0) {
-          sysClients<-sysClients+1
-          possibleClients <-possibleClients-minimo
-          possibleClients[indice_minimo_a]<- NA
-          iServ <- iServ + 1
-        } else{
-          sysClients<-sysClients+1
-          tServ[iServ]<-tServ[iServ]-minimo
-          possibleClients<-possibleClients-minimo
-          possibleClients[indice_minimo_a]<- NA
-        }
-      }
-    }
-    
-    simClients <- cron <- c <- d <- 0
-
-    while(simClients < nClients) {
-      indice_minimo_a <- which.min(possibleClients)
-      
-      if (sysClients>0)
-        minimo <- min(possibleClients[indice_minimo_a],tServ[iServ])
-      else
-        minimo <- possibleClients[indice_minimo_a]
-      
-      if (length(indice_minimo_a) == 0 || minimo==tServ[iServ]) {
-        cron <- cron + minimo
-        c <- c + minimo*sysClients
-        d <- d + minimo*(sysClients-1)
-        tnClients[sysClients+1] <- tnClients[sysClients+1]+minimo
-        sysClients<-sysClients-1
-        if (sysClients==0)
-          tServ[iServ] <- -1
-        else
-          iServ <- iServ + 1
-        possibleClients<-possibleClients-minimo
-        possibleClients[which(is.na(possibleClients))[1]]<- tArr[iArr]
-        iArr <- iArr + 1
-      } else {
-        simClients <- simClients+1
+        tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+        tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+        possibleClients <- tArr[1:H]
+        iServ <- 1
+        iArr <- H+1
+        sysClients <- 0
+        simClients <- cron <- c <- d <- 0
         
-        if (sysClients==0) {
-          cron <- cron + minimo
-          tnClients[sysClients+1] <- tnClients[sysClients+1]+minimo
-          sysClients <- sysClients+1
-          possibleClients <- possibleClients-minimo
-          possibleClients[indice_minimo_a]<- NA
-          iServ <- iServ + 1
-        } else {
-          cron <- cron+minimo
-          c <- c + minimo*sysClients
-          d <- d + minimo*(sysClients-1)
-          tnClients[sysClients+1] <- tnClients[sysClients+1]+minimo
-          sysClients <- sysClients+1
-          tServ[iServ] <- tServ[iServ]-minimo
-          possibleClients<-possibleClients-minimo
-          possibleClients[indice_minimo_a]<- NA
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, H=H, Staclients=staClients, Nclients=nClients)
+        tnClients <- numeric(nClients)
+        if (historic) hist <- matrix(nrow=(nClients+sysClients), ncol=6, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
+        
+        while(simClients < staClients) {
+          indice_minimo_a <- which.min(possibleClients)
+          
+          if(sysClients>0)
+            minimo<-min(possibleClients[indice_minimo_a], tServ[iServ])
+          else
+            minimo<-possibleClients[indice_minimo_a]
+          
+          if (length(indice_minimo_a) == 0 || minimo==tServ[iServ]) {
+            cron <- cron + minimo
+            c <- c + minimo*sysClients
+            d <- d + minimo*(sysClients-1)
+            sysClients <- sysClients-1
+            if (sysClients==0)
+              tServ[iServ] <- -1
+            else
+              iServ <- iServ + 1
+            possibleClients<-possibleClients-minimo
+            possibleClients[which(is.na(possibleClients))]<- tArr[iArr]
+            iArr <- iArr+1
+          } else {
+            simClients<-simClients+1
+            
+            if(sysClients==0) {
+              cron <- cron + minimo
+              sysClients<-sysClients+1
+              possibleClients <-possibleClients-minimo
+              possibleClients[indice_minimo_a]<- NA
+              iServ <- iServ + 1
+            } else{
+              cron <- cron+minimo
+              c <- c + minimo*sysClients
+              d <- d + minimo*(sysClients-1)
+              sysClients<-sysClients+1
+              tServ[iServ]<-tServ[iServ]-minimo
+              possibleClients<-possibleClients-minimo
+              possibleClients[indice_minimo_a]<- NA
+            }
+          }
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            
+            hist[simClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+          }
         }
-      }
-      #En cada iteración almacenamos la evolucion de los valores
-      if (historic) {
+        
+        simClients <- cron <- c <- d <- 0
+    
+        while(simClients < nClients) {
+          indice_minimo_a <- which.min(possibleClients)
+          
+          if (sysClients>0)
+            minimo <- min(possibleClients[indice_minimo_a],tServ[iServ])
+          else
+            minimo <- possibleClients[indice_minimo_a]
+          
+          if (length(indice_minimo_a) == 0 || minimo==tServ[iServ]) {
+            cron <- cron + minimo
+            c <- c + minimo*sysClients
+            d <- d + minimo*(sysClients-1)
+            tnClients[sysClients+1] <- tnClients[sysClients+1]+minimo
+            sysClients<-sysClients-1
+            if (sysClients==0)
+              tServ[iServ] <- -1
+            else
+              iServ <- iServ + 1
+            possibleClients<-possibleClients-minimo
+            possibleClients[which(is.na(possibleClients))[1]]<- tArr[iArr]
+            iArr <- iArr + 1
+          } else {
+            simClients <- simClients+1
+            
+            if (sysClients==0) {
+              cron <- cron + minimo
+              tnClients[sysClients+1] <- tnClients[sysClients+1]+minimo
+              sysClients <- sysClients+1
+              possibleClients <- possibleClients-minimo
+              possibleClients[indice_minimo_a]<- NA
+              iServ <- iServ + 1
+            } else {
+              cron <- cron+minimo
+              c <- c + minimo*sysClients
+              d <- d + minimo*(sysClients-1)
+              tnClients[sysClients+1] <- tnClients[sysClients+1]+minimo
+              sysClients <- sysClients+1
+              tServ[iServ] <- tServ[iServ]-minimo
+              possibleClients<-possibleClients-minimo
+              possibleClients[indice_minimo_a]<- NA
+            }
+          }
+          #En cada iteración almacenamos la evolucion de los valores
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            
+            hist[simClients+staClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+          }
+        }
         l <- c/cron
         lq <- d/cron
         w <- c/nClients
         wq <- d/nClients
+        rho <- l - lq
+        eff <- w/(w-wq)
+        pn <- tnClients[1:max(which(tnClients>0))]/cron
+        if (historic)
+          obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+        else
+          obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
         
-        hist[simClients, ] <- c(l,lq,w,wq)
-      }
+        oldClass(obj) <-  c("G_G_1_INF_H", "SimulatedModel")
+        return(obj)
     }
-    l <- c/cron
-    lq <- d/cron
-    w <- c/nClients
-    wq <- d/nClients
-    rho <- l - lq
-    eff <- w/(w-wq)
-    pn <- tnClients[1:max(which(tnClients>0))]/cron
-    if (historic)
-      obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-    else
-      obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-    
-    oldClass(obj) <-  c("G_G_1_INF_H", "SimulatedModel")
-    return(obj)
+    if (nproc > 1) {
+      cluster <- makeCluster(nproc)
+      registerDoParallel(cluster)
+      parallelRes <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %dopar% {
+        belong <- function(obj, packagename) {
+          if (length(obj) > 1)
+            packageobj <- sapply(lapply(obj, class), attr, "package")
+          else
+            packageobj <- attr(class(obj), "package")
+          
+          return(all(packageobj==packagename))
+        }
+        G_G_1_INF_H_secuential(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic)
+      }
+      stopCluster(cluster)
+      return(parallelRes)
+    }
+    res <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %do% {
+      G_G_1_INF_H_secuential(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic)
+    }
+    return(res)
 }
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H  model by simulation
@@ -889,147 +988,170 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), 
 #' @export
 #' @family SimulatedModels
 
-G_G_S_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2, H=2, staClients=100, nClients=1000, historic=FALSE) {
-      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
-      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-      if (s <= 0) stop("Argument 's' must be greather than 0.")
-      if (H <= 0) stop("Argument 'H' must be greather than 0.")
-      if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
-      if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
-  
-      tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
-      tServ <- r(serviceDistribution) ((nClients+staClients)*2)
-      possibleClients <- tArr[1:H]
-      bussyservers <- rep(NA, s)
-      iServ <- 1
-      iArr <- H+1
-      sysClients <- 0
-      simClients <- 0
-      nClicien <- 100/nClients
-      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Nclients=nClients)
-      tnClients <- numeric(nClients)
-      if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
+G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=3, H=5, staClients=100, nClients=1000, historic=FALSE, nsim=1, nproc=1) {
+      G_G_S_INF_H_secuential <- function(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic) {
+          if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+          if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
+          if (s <= 0) stop("Argument 's' must be greather than 0.")
+          if (H <= 0) stop("Argument 'H' must be greather than 0.")
+          if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
+          if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
       
-      while(simClients < staClients) {        
-        if(sysClients>0) {
-          indice_minimo_a <- which.min(possibleClients)
-          indice_minimo_b <- which.min(bussyservers)
-          tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
-        }
-        else {
-          indice_minimo_a <- which.min(possibleClients)
-          tmin <- possibleClients[indice_minimo_a]
-        }
-        
-        if (length(indice_minimo_a > 0) && (tmin == possibleClients[indice_minimo_a])) {
-          simClients <- simClients + 1
-          if (sysClients < s) {
-            sysClients <- sysClients + 1
-            possibleClients <- possibleClients - tmin
-            possibleClients[indice_minimo_a] <- NA
-            bussyservers <- bussyservers - tmin
-            bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
-            iServ <- iServ + 1
-          } else {
-            sysClients <- sysClients + 1
-            bussyservers <- bussyservers - tmin
-            possibleClients <- possibleClients - tmin
-            possibleClients[indice_minimo_a] <- NA
+          tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+          tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+          possibleClients <- tArr[1:H]
+          bussyservers <- rep(NA, s)
+          iServ <- 1
+          iArr <- H+1
+          sysClients <- 0
+          simClients <- cron <- c <- d <- 0
+          nClicien <- 100/nClients
+          obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Staclients=staClients, Nclients=nClients)
+          tnClients <- numeric(nClients)
+          if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=6, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
+          
+          while(simClients < staClients) {        
+            if(sysClients>0) {
+              indice_minimo_a <- which.min(possibleClients)
+              indice_minimo_b <- which.min(bussyservers)
+              tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
+            }
+            else {
+              indice_minimo_a <- which.min(possibleClients)
+              tmin <- possibleClients[indice_minimo_a]
+            }
+            
+            if (length(indice_minimo_a > 0) && (tmin == possibleClients[indice_minimo_a])) {
+              simClients <- simClients + 1
+              if (sysClients < s) {
+                sysClients <- sysClients + 1
+                possibleClients <- possibleClients - tmin
+                possibleClients[indice_minimo_a] <- NA
+                bussyservers <- bussyservers - tmin
+                bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
+                iServ <- iServ + 1
+              } else {
+                sysClients <- sysClients + 1
+                bussyservers <- bussyservers - tmin
+                possibleClients <- possibleClients - tmin
+                possibleClients[indice_minimo_a] <- NA
+              }
+            } else {
+              sysClients <- sysClients - 1 
+              bussyservers <- bussyservers-tmin
+              if (sysClients < s)
+                bussyservers[indice_minimo_b] <- NA
+              else {
+                bussyservers[indice_minimo_b] <- tServ[iServ]
+                iServ <- iServ + 1
+              }
+              possibleClients <- possibleClients - tmin
+              possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
+              iArr <- iArr+1
+            }
           }
-        } else {
-          sysClients <- sysClients - 1 
-          bussyservers <- bussyservers-tmin
-          if (sysClients < s)
-            bussyservers[indice_minimo_b] <- NA
-          else {
-            bussyservers[indice_minimo_b] <- tServ[iServ]
-            iServ <- iServ + 1
+          simClients <- cron <- c <- d <- 0
+#           progressbar <- txtProgressBar(min=0, max=nClients, style=3)
+#           auxProg <- !(((0:nClients)/nClients*100) %% 5)
+#           jump <- 10
+          while (simClients < nClients) {
+#             if (auxProg[simClients+1]) setTxtProgressBar(progressbar, simClients)
+            if(sysClients>0) {
+              indice_minimo_a <- which.min(possibleClients)
+              indice_minimo_b <- which.min(bussyservers)
+              tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
+            }
+            else {
+              indice_minimo_a <- which.min(possibleClients)
+              tmin <- possibleClients[indice_minimo_a]
+            }
+            
+            if (length(indice_minimo_a > 0) && (tmin == possibleClients[indice_minimo_a])) {
+              simClients <- simClients + 1
+              if (sysClients < s) {
+                cron <- cron + tmin
+                tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
+                c <- c + tmin*sysClients
+                sysClients <- sysClients + 1
+                possibleClients <- possibleClients - tmin
+                possibleClients[indice_minimo_a] <- NA
+                bussyservers <- bussyservers - tmin
+                bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
+                iServ <- iServ + 1
+              } else {
+                cron <- cron + tmin
+                tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
+                c <- c + tmin*sysClients
+                d <- d + tmin*(sysClients-s)
+                sysClients <- sysClients + 1
+                bussyservers <- bussyservers - tmin
+                possibleClients <- possibleClients - tmin
+                possibleClients[indice_minimo_a] <- NA
+              }
+            } else {
+              cron <- cron + tmin
+              c <- c + tmin*sysClients
+              if (sysClients > s)
+                d <- d + tmin*(sysClients-s)
+              tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
+              sysClients <- sysClients - 1 
+              bussyservers <- bussyservers - tmin
+              if (sysClients < s)
+                bussyservers[indice_minimo_b] <- NA
+              else {
+                bussyservers[indice_minimo_b ] <- tServ[iServ]
+                iServ <- iServ + 1
+              }
+              possibleClients <- possibleClients - tmin
+              possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
+              iArr <- iArr+1
+            } 
+            #En cada iteración almacenamos la evolucion de los valores
+            if (historic) {
+              l <- c/cron
+              lq <- d/cron
+              w <- c/simClients
+              wq <- d/simClients
+              
+              hist[simClients, ] <- c(l,lq,w,wq)
+            }
           }
-          possibleClients <- possibleClients - tmin
-          possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
-          iArr <- iArr+1
-        }
-      }
-      simClients <- cron <- c <- d <- 0
-      progressbar <- txtProgressBar(min=0, max=nClients, style=3)
-      auxProg <- !(((0:nClients)/nClients*100) %% 5)
-      jump <- 10
-      while (simClients < nClients) {
-        if (auxProg[simClients+1]) setTxtProgressBar(progressbar, simClients)
-        if(sysClients>0) {
-          indice_minimo_a <- which.min(possibleClients)
-          indice_minimo_b <- which.min(bussyservers)
-          tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
-        }
-        else {
-          indice_minimo_a <- which.min(possibleClients)
-          tmin <- possibleClients[indice_minimo_a]
-        }
-        
-        if (length(indice_minimo_a > 0) && (tmin == possibleClients[indice_minimo_a])) {
-          simClients <- simClients + 1
-          if (sysClients < s) {
-            cron <- cron + tmin
-            tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
-            c <- c + tmin*sysClients
-            sysClients <- sysClients + 1
-            possibleClients <- possibleClients - tmin
-            possibleClients[indice_minimo_a] <- NA
-            bussyservers <- bussyservers - tmin
-            bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
-            iServ <- iServ + 1
-          } else {
-            cron <- cron + tmin
-            tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
-            c <- c + tmin*sysClients
-            d <- d + tmin*(sysClients-s)
-            sysClients <- sysClients + 1
-            bussyservers <- bussyservers - tmin
-            possibleClients <- possibleClients - tmin
-            possibleClients[indice_minimo_a] <- NA
-          }
-        } else {
-          cron <- cron + tmin
-          c <- c + tmin*sysClients
-          if (sysClients > s)
-            d <- d + tmin*(sysClients-s)
-          tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
-          sysClients <- sysClients - 1 
-          bussyservers <- bussyservers - tmin
-          if (sysClients < s)
-            bussyservers[indice_minimo_b] <- NA
-          else {
-            bussyservers[indice_minimo_b ] <- tServ[iServ]
-            iServ <- iServ + 1
-          }
-          possibleClients <- possibleClients - tmin
-          possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
-          iArr <- iArr+1
-        } 
-        #En cada iteración almacenamos la evolucion de los valores
-        if (historic) {
           l <- c/cron
           lq <- d/cron
           w <- c/nClients
           wq <- d/nClients
+          rho <- l - lq
+          eff <- w/(w-wq)
+          pn <- tnClients[1:max(which(tnClients>0))]/cron
+          if (historic)
+            obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+          else
+            obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+          oldClass(obj) <-  c("G_G_S_INF_H", "SimulatedModel")
+#           close(progressbar)
+          return(obj)
+    }
+    if (nproc > 1) {
+      cluster <- makeCluster(nproc)
+      registerDoParallel(cluster)
+      parallelRes <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %dopar% {
+        belong <- function(obj, packagename) {
+          if (length(obj) > 1)
+            packageobj <- sapply(lapply(obj, class), attr, "package")
+          else
+            packageobj <- attr(class(obj), "package")
           
-          hist[simClients, ] <- c(l,lq,w,wq)
+          return(all(packageobj==packagename))
         }
+        G_G_S_INF_H_secuential(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic)
       }
-      l <- c/cron
-      lq <- d/cron
-      w <- c/nClients
-      wq <- d/nClients
-      rho <- l - lq
-      eff <- w/(w-wq)
-      pn <- tnClients[1:max(which(tnClients>0))]/cron
-      if (historic)
-        obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-      else
-        obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-      oldClass(obj) <-  c("G_G_S_INF_H", "SimulatedModel")
-      close(progressbar)
-      return(obj)
+      stopCluster(cluster)
+      return(parallelRes)
+    }
+    res <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %do% {
+      G_G_S_INF_H_secuential(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic)
+    }
+    return(res)
 }
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H with Y replacements model by simulation
@@ -1054,166 +1176,207 @@ G_G_S_INF_H <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), 
 #' \item{historic}{Optional parameter that stores the evolution of \eqn{L}, \eqn{Lq}, \eqn{W} and \eqn{Wq} during the simulation}
 #' @export
 #' @family SimulatedModels
-G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), s=2, H=2, Y=3, staClients=100, nClients=1000, historic=FALSE) {
-  if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
-  if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-  if (s <= 0) stop("Argument 's' must be greather than 0.")
-  if (H <= 0) stop("Argument 'H' must be greather than 0.")
-  if (Y <= 0) stop("Argument 'Y' must be greather than 0.")
-  if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
-  if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
-  
-  tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
-  tServ <- r(serviceDistribution) ((nClients+staClients)*2)
-  possibleClients <- tArr[1:H]
-#   bussyservers <- rep(-1, s)
-  bussyservers <- rep(NA, s)
-  iServ <- 1
-  iArr <- H+1
-  sysClients <- 0
-  simClients <- 0
-  
-  obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Y=Y, Nclients=nClients)
-  tnClients <- numeric(nClients)
-  if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
-  
-  while(simClients < staClients) {    
-    if(sysClients>0) {
-      indice_minimo_b <- which.min(bussyservers)
-      indice_minimo_a <- which.min(possibleClients)
-      tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
-    }else {
-      indice_minimo_a <- which.min(possibleClients)
-      tmin <- possibleClients[indice_minimo_a]
-    }
-    
-    if (length(indice_minimo_a) > 0 && (tmin == possibleClients[indice_minimo_a])) {
-      simClients <- simClients + 1
-      if (sysClients < s) {
-        sysClients <- sysClients + 1
-        possibleClients <- possibleClients - tmin
-        possibleClients[indice_minimo_a] <- NA
-
-        bussyservers <- bussyservers - tmin
-        bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
-        iServ <- iServ + 1
-        if (sysClients <= Y) {
-          possibleClients[indice_minimo_a] <- tArr[iArr]
-          iArr <- iArr + 1
+G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=3, H=5, Y=3, staClients=100, nClients=1000, historic=FALSE, nsim=1, nproc=1) {
+  G_G_S_INF_H_Y_secuential <- function(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic) {
+        if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+        if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
+        if (s <= 0) stop("Argument 's' must be greather than 0.")
+        if (H <= 0) stop("Argument 'H' must be greather than 0.")
+        if (Y <= 0) stop("Argument 'Y' must be greather than 0.")
+        if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
+        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+        
+        tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+        tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+        possibleClients <- tArr[1:H]
+        #   bussyservers <- rep(-1, s)
+        bussyservers <- rep(NA, s)
+        iServ <- 1
+        iArr <- H+1
+        sysClients <- 0
+        simClients <- cron <- c <- d <- 0
+        
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Y=Y, Staclients=staClients, Nclients=nClients)
+        tnClients <- numeric(nClients)
+        if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=6, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
+        
+        while(simClients < staClients) {    
+          if(sysClients>0) {
+            indice_minimo_b <- which.min(bussyservers)
+            indice_minimo_a <- which.min(possibleClients)
+            tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
+          }else {
+            indice_minimo_a <- which.min(possibleClients)
+            tmin <- possibleClients[indice_minimo_a]
+          }
+          
+          if (length(indice_minimo_a) > 0 && (tmin == possibleClients[indice_minimo_a])) {
+            simClients <- simClients + 1
+            if (sysClients < s) {
+              cron <- cron + tmin
+              c <- c + tmin*sysClients
+              sysClients <- sysClients + 1
+              possibleClients <- possibleClients - tmin
+              possibleClients[indice_minimo_a] <- NA
+        
+              bussyservers <- bussyservers - tmin
+              bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
+              iServ <- iServ + 1
+              if (sysClients <= Y) {
+                possibleClients[indice_minimo_a] <- tArr[iArr]
+                iArr <- iArr + 1
+              }
+            } else {
+              cron <- cron + tmin
+              c <- c + tmin*sysClients
+              d <- d + tmin*(sysClients-s)
+              sysClients <- sysClients + 1
+              bussyservers <- bussyservers - tmin
+              possibleClients <- possibleClients - tmin
+              possibleClients[indice_minimo_a] <- NA
+              if (sysClients <= Y) {
+                possibleClients[indice_minimo_a] <- tArr[iArr]
+                iArr <- iArr + 1
+              }
+            }
+          } else {
+            cron <- cron + tmin
+            c <- c + tmin*sysClients
+            if (sysClients > s)
+              d <- d + tmin*(sysClients-s)
+            
+            sysClients <- sysClients - 1 
+            bussyservers <- bussyservers - tmin
+            if (sysClients < s)
+              bussyservers[indice_minimo_b] <- NA
+            else {
+              bussyservers[indice_minimo_b ] <- tServ[iServ]
+              iServ <- iServ + 1
+            }
+            possibleClients <- possibleClients - tmin
+            if (sysClients >= Y) {
+              possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
+              iArr <- iArr+1
+            }
+          }
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            
+            hist[simClients, ] <- c(l,lq,w,wq, sysClients, (l-lq)/s)
+          }
         }
-      } else {
-        sysClients <- sysClients + 1
-        bussyservers <- bussyservers - tmin
-        possibleClients <- possibleClients - tmin
-        possibleClients[indice_minimo_a] <- NA
-        if (sysClients <= Y) {
-          possibleClients[indice_minimo_a] <- tArr[iArr]
-          iArr <- iArr + 1
+        simClients <- cron <- c <- d <- 0
+        while (simClients < nClients) {
+          
+          if(sysClients>0) {
+            indice_minimo_b <- which.min(bussyservers)
+            indice_minimo_a <- which.min(possibleClients)
+            tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
+          } else {
+            indice_minimo_a <- which.min(possibleClients)
+            tmin <- possibleClients[indice_minimo_a]
+          }
+        
+          
+          if (length(indice_minimo_a) > 0 && (tmin == possibleClients[indice_minimo_a])) {
+            simClients <- simClients + 1
+            if (sysClients < s) {
+              cron <- cron + tmin
+              tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
+              c <- c + tmin*sysClients
+              sysClients <- sysClients + 1
+              possibleClients <- possibleClients - tmin
+              possibleClients[indice_minimo_a] <- NA
+              if (sysClients <= Y) {
+                possibleClients[indice_minimo_a] <- tArr[iArr]
+                iArr <- iArr + 1
+              }
+              bussyservers <- bussyservers - tmin
+              bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
+              iServ <- iServ + 1
+            } else {
+              cron <- cron + tmin
+              tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
+              c <- c + tmin*sysClients
+              d <- d + tmin*(sysClients-s)
+              sysClients <- sysClients + 1
+              bussyservers <- bussyservers - tmin
+              possibleClients <- possibleClients - tmin
+              possibleClients[indice_minimo_a] <- NA
+              if (sysClients <= Y) {
+                possibleClients[indice_minimo_a] <- tArr[iArr]
+                iArr <- iArr + 1
+              }
+            }
+          } else {
+            cron <- cron + tmin
+            c <- c + tmin*sysClients
+            if (sysClients > s)
+              d <- d + tmin*(sysClients-s)
+            tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
+            sysClients <- sysClients - 1 
+            bussyservers <- bussyservers - tmin
+            if (sysClients < s)
+              bussyservers[indice_minimo_b] <- NA
+            else {
+              bussyservers[indice_minimo_b ] <- tServ[iServ]
+              iServ <- iServ + 1
+            }
+            possibleClients <- possibleClients - tmin
+            if (sysClients >= Y) {
+              possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
+              iArr <- iArr+1
+            }
+          } 
+          #En cada iteración almacenamos la evolucion de los valores
+          if (historic) {
+            l <- c/cron
+            lq <- d/cron
+            w <- c/simClients
+            wq <- d/simClients
+            
+            hist[simClients, ] <- c(l,lq,w,wq, sysClients, (l-lq)/s)
+          }
         }
-      }
-    } else {
-      sysClients <- sysClients - 1 
-      bussyservers <- bussyservers - tmin
-      if (sysClients < s)
-        bussyservers[indice_minimo_b] <- NA
-      else {
-        bussyservers[indice_minimo_b ] <- tServ[iServ]
-        iServ <- iServ + 1
-      }
-      possibleClients <- possibleClients - tmin
-      if (sysClients >= Y) {
-        possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
-        iArr <- iArr+1
-      }
-    }
+        l <- c/cron
+        lq <- d/cron
+        w <- c/nClients
+        wq <- d/nClients
+        rho <- (l - lq)/s
+        eff <- w/(w-wq)
+        pn <- tnClients[1:max(which(tnClients>0))]/cron
+        if (historic)
+          obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+        else
+          obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+        
+        oldClass(obj) <-  c("G_G_S_INF_H_Y", "SimulatedModel")
+        return(obj)
   }
-  simClients <- cron <- c <- d <- 0
-  while (simClients < nClients) {
-    
-    if(sysClients>0) {
-      indice_minimo_b <- which.min(bussyservers)
-      indice_minimo_a <- which.min(possibleClients)
-      tmin <- min(possibleClients[indice_minimo_a], bussyservers[indice_minimo_b])
-    } else {
-      indice_minimo_a <- which.min(possibleClients)
-      tmin <- possibleClients[indice_minimo_a]
+  if (nproc > 1) {
+    cluster <- makeCluster(nproc)
+    registerDoParallel(cluster)
+    parallelRes <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %dopar% {
+      belong <- function(obj, packagename) {
+        if (length(obj) > 1)
+          packageobj <- sapply(lapply(obj, class), attr, "package")
+        else
+          packageobj <- attr(class(obj), "package")
+        
+        return(all(packageobj==packagename))
+      }
+      G_G_S_INF_H_Y_secuential(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic)
     }
-
-    
-    if (length(indice_minimo_a) > 0 && (tmin == possibleClients[indice_minimo_a])) {
-      simClients <- simClients + 1
-      if (sysClients < s) {
-        cron <- cron + tmin
-        tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
-        c <- c + tmin*sysClients
-        sysClients <- sysClients + 1
-        possibleClients <- possibleClients - tmin
-        possibleClients[indice_minimo_a] <- NA
-        if (sysClients <= Y) {
-          possibleClients[indice_minimo_a] <- tArr[iArr]
-          iArr <- iArr + 1
-        }
-        bussyservers <- bussyservers - tmin
-        bussyservers[which(is.na(bussyservers))[1]] <- tServ[iServ]
-        iServ <- iServ + 1
-      } else {
-        cron <- cron + tmin
-        tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
-        c <- c + tmin*sysClients
-        d <- d + tmin*(sysClients-s)
-        sysClients <- sysClients + 1
-        bussyservers <- bussyservers - tmin
-        possibleClients <- possibleClients - tmin
-        possibleClients[indice_minimo_a] <- NA
-        if (sysClients <= Y) {
-          possibleClients[indice_minimo_a] <- tArr[iArr]
-          iArr <- iArr + 1
-        }
-      }
-    } else {
-      cron <- cron + tmin
-      c <- c + tmin*sysClients
-      if (sysClients > s)
-        d <- d + tmin*(sysClients-s)
-      tnClients[sysClients+1] <- tnClients[sysClients+1]+tmin
-      sysClients <- sysClients - 1 
-      bussyservers <- bussyservers - tmin
-      if (sysClients < s)
-        bussyservers[indice_minimo_b] <- NA
-      else {
-        bussyservers[indice_minimo_b ] <- tServ[iServ]
-        iServ <- iServ + 1
-      }
-      possibleClients <- possibleClients - tmin
-      if (sysClients >= Y) {
-        possibleClients[which(is.na(possibleClients))[1]] <- tArr[iArr]
-        iArr <- iArr+1
-      }
-    } 
-    #En cada iteración almacenamos la evolucion de los valores
-    if (historic) {
-      l <- c/cron
-      lq <- d/cron
-      w <- c/nClients
-      wq <- d/nClients
-      
-      hist[simClients, ] <- c(l,lq,w,wq)
-    }
+    stopCluster(cluster)
+    return(parallelRes)
   }
-  l <- c/cron
-  lq <- d/cron
-  w <- c/nClients
-  wq <- d/nClients
-  rho <- (l - lq)/s
-  eff <- w/(w-wq)
-  pn <- tnClients[1:max(which(tnClients>0))]/cron
-  if (historic)
-    obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-  else
-    obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-  
-  oldClass(obj) <-  c("G_G_S_INF_H_Y", "SimulatedModel")
-  return(obj)
+  res <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %do% {
+    G_G_S_INF_H_Y_secuential(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic)
+  }
+  return(res)
 }
 
 #' Obtains the main characteristics of a G/G/\eqn{\infty} model by simulation
@@ -1235,116 +1398,150 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1)
 #' \item{historic}{Optional parameter that stores the evolution of \eqn{L}, \eqn{Lq}, \eqn{W} and \eqn{Wq} during the simulation}
 #' @export
 #' @family SimulatedModels
-G_G_INF <- function(arrivalDistribution=Exp(1), serviceDistribution=Exp(1), staClients=100, nClients=1000, historic=FALSE) {
-  if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
-  if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-  if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
-  if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
-  
-  tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
-  tServ <- r(serviceDistribution) ((nClients+staClients)*2)
-  iServ <- iArr <- 1
-  sysClients <- 0
-  simClients <- 0
-  a <- 0
-  b <- -1
-  
-  obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Nclients=nClients)
-  tnClients <- numeric(nClients)
-  if (historic) hist <- matrix(nrow=nClients, ncol=4, dimnames=list(1:nClients, c("L", "Lq", "W","Wq")))
-  
-  while(simClients < staClients) {
-    indice_j <- which(b != -1)
-    indice_j_menos_uno <- which(b==-1)
-    
-    if (length(indice_j_menos_uno) == 0) {
-      b <- c(b, -1)
-      indice_j_menos_uno <- length(b)
-    }
-    
-    if (sysClients > 0) {
-      posibles_b <- b[indice_j]
-      tmin <- min(a, posibles_b)
-    } else
-      tmin <- a
-    
-    if (tmin == a) {
-      simClients <- simClients + 1
-      sysClients <- sysClients + 1
-      a <- tArr[iArr]
-      iArr <- iArr + 1
-      b[indice_j] <- b[indice_j] - tmin
-      b[indice_j_menos_uno[1]] <- tServ[iServ]
-      iServ <- iServ + 1
-    } else {
-      indice_minimo <- which(b==tmin)
-      sysClients <- sysClients - 1
-      b[indice_j] <- b[indice_j] - tmin
-      b[indice_minimo] <- -1
-      a <- a - tmin
-    }
-  }
-  simClients <- cron <- c <- d <- 0
-  
-  while(simClients < nClients) {
-    #print(simClients)
-    indice_j <- which(b != -1)
-    indice_j_menos_uno <- which(b==-1)
-    
-    if (length(indice_j_menos_uno) == 0) {
-      b <- c(b, -1)
-      indice_j_menos_uno <- length(b)
-    }
-    
-    if (sysClients > 0) {
-      posibles_b <- b[indice_j]
-      tmin <- min(a, posibles_b)
-    } else
-      tmin <- a
-    
-    cron <- cron + tmin
-    tnClients[sysClients+1] <- tnClients[sysClients+1] + tmin
-    if (tmin == a) {
-      simClients <- simClients + 1
-      c <- c + tmin*sysClients
-      sysClients <- sysClients + 1
-      a <- tArr[iArr]
-      iArr <- iArr + 1
-      b[indice_j] <- b[indice_j] - tmin
-      b[indice_j_menos_uno[1]] <- tServ[iServ]
-      iServ <- iServ + 1
-    } else {
-      indice_minimo <- which(b==tmin)
-      c <- c + tmin*sysClients
-      sysClients <- sysClients - 1
-      b[indice_j] <- b[indice_j] - tmin
-      b[indice_minimo] <- -1
-      a <- a - tmin
-    }
-    #En cada iteración almacenamos la evolucion de los valores
-    if (historic) {
+G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staClients=100, nClients=1000, historic=FALSE, nsim=1, nproc=1) {
+  G_G_INF_secuential <- function(arrivalDistribution, serviceDistribution, staClients, nClients, historic) {
+      if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
+      if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
+      if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
+      if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+      
+      tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
+      tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+      iServ <- iArr <- 1
+      sysClients <- 0
+      simClients <- cron <- c <- d <- 0
+      a <- 0
+      b <- -1
+      
+      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Staclients=staClients, Nclients=nClients)
+      tnClients <- numeric(nClients)
+      if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=6, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity")))
+      
+      while(simClients < staClients) {
+        indice_j <- which(b != -1)
+        indice_j_menos_uno <- which(b==-1)
+        
+        if (length(indice_j_menos_uno) == 0) {
+          b <- c(b, -1)
+          indice_j_menos_uno <- length(b)
+        }
+        
+        if (sysClients > 0) {
+          posibles_b <- b[indice_j]
+          tmin <- min(a, posibles_b)
+        } else
+          tmin <- a
+        
+        cron <- cron + tmin
+        if (tmin == a) {
+          simClients <- simClients + 1
+          c <- c + tmin*sysClients
+          sysClients <- sysClients + 1
+          a <- tArr[iArr]
+          iArr <- iArr + 1
+          b[indice_j] <- b[indice_j] - tmin
+          b[indice_j_menos_uno[1]] <- tServ[iServ]
+          iServ <- iServ + 1
+        } else {
+          indice_minimo <- which(b==tmin)
+          c <- c + tmin*sysClients
+          sysClients <- sysClients - 1
+          b[indice_j] <- b[indice_j] - tmin
+          b[indice_minimo] <- -1
+          a <- a - tmin
+        }
+        if (historic) {
+          l <- c/cron
+          lq <- d/cron
+          w <- c/simClients
+          wq <- d/simClients
+          
+          hist[simClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+        }
+      }
+      simClients <- cron <- c <- d <- 0
+      
+      while(simClients < nClients) {
+        #print(simClients)
+        indice_j <- which(b != -1)
+        indice_j_menos_uno <- which(b==-1)
+        
+        if (length(indice_j_menos_uno) == 0) {
+          b <- c(b, -1)
+          indice_j_menos_uno <- length(b)
+        }
+        
+        if (sysClients > 0) {
+          posibles_b <- b[indice_j]
+          tmin <- min(a, posibles_b)
+        } else
+          tmin <- a
+        
+        cron <- cron + tmin
+        tnClients[sysClients+1] <- tnClients[sysClients+1] + tmin
+        if (tmin == a) {
+          simClients <- simClients + 1
+          c <- c + tmin*sysClients
+          sysClients <- sysClients + 1
+          a <- tArr[iArr]
+          iArr <- iArr + 1
+          b[indice_j] <- b[indice_j] - tmin
+          b[indice_j_menos_uno[1]] <- tServ[iServ]
+          iServ <- iServ + 1
+        } else {
+          indice_minimo <- which(b==tmin)
+          c <- c + tmin*sysClients
+          sysClients <- sysClients - 1
+          b[indice_j] <- b[indice_j] - tmin
+          b[indice_minimo] <- -1
+          a <- a - tmin
+        }
+        #En cada iteración almacenamos la evolucion de los valores
+        if (historic) {
+          l <- c/cron
+          lq <- d/cron
+          w <- c/simClients
+          wq <- d/simClients
+          
+          hist[simClients+staClients, ] <- c(l,lq,w,wq, sysClients, l-lq)
+        }
+      }
       l <- c/cron
       lq <- d/cron
       w <- c/nClients
       wq <- d/nClients
+      rho <- l - lq
+      eff <- w/(w-wq)
+      pn <- tnClients[1:max(which(tnClients>0))]/cron
+      if (historic)
+        obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+      else
+        obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+      oldClass(obj) <-  c("G_G_INF", "SimulatedModel")
       
-      hist[simClients, ] <- c(l,lq,w,wq)
-    }
+      return(obj)
   }
-  l <- c/cron
-  lq <- d/cron
-  w <- c/nClients
-  wq <- d/nClients
-  rho <- l - lq
-  eff <- w/(w-wq)
-  pn <- tnClients[1:max(which(tnClients>0))]/cron
-  if (historic)
-    obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-  else
-    obj$out <- list(l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-  oldClass(obj) <-  c("G_G_INF", "SimulatedModel")
-  
-  return(obj)
+  if (nproc > 1) {
+    cluster <- makeCluster(nproc)
+    registerDoParallel(cluster)
+    parallelRes <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %dopar% {
+      belong <- function(obj, packagename) {
+        if (length(obj) > 1)
+          packageobj <- sapply(lapply(obj, class), attr, "package")
+        else
+          packageobj <- attr(class(obj), "package")
+        
+        return(all(packageobj==packagename))
+      }
+      G_G_INF_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)
+    }
+    stopCluster(cluster)
+    return(parallelRes)
+  }
+  res <- foreach(nClients=rep(nClients, nsim), .combine=combineSimulations, .multicombine=TRUE, .packages="distr") %do% {
+    G_G_INF_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)
+  }
+  return(res)
 }
 
 SCN_example <- function (sta, trans) {
@@ -1378,7 +1575,7 @@ SCN_example <- function (sta, trans) {
 #' @export
 #' @family SimulatedModels
 
-ClosedNetwork <- function(serviceDistribution, s, p, staClients, nClients, transitions, historic=FALSE) {
+ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)), s=c(2,2,1,1), p=array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)), staClients=100, nClients=3, transitions=1000, historic=FALSE) {
   if (!belong(serviceDistribution, "distr")) stop("All elements in argument 'serviceDistribution'must be a valid Class of the Distr package")
   if (any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
   if (staClients <= 0) stop("Argument 'staClients' must be greather than 0.")
@@ -1397,7 +1594,7 @@ ClosedNetwork <- function(serviceDistribution, s, p, staClients, nClients, trans
   obj <- list(serviceDistribution=serviceDistribution, Servs= s, Prob=p, Nclients=nClients)
   if (historic) hist <- array(dim=c(nodes, 4, transitions), dimnames=list(1:nodes, c("L", "Lq", "W","Wq"), 1:transitions))
   
-  sysClients <- floor((nClients-1)*(s^(-1))/sum(s^-1))
+  sysClients <- floor((nClients)*(s^(-1))/sum(s^-1))
   res <- nClients-sum(sysClients)
   sysClients[1:res] <- sysClients[1:res] + 1
   
@@ -1564,7 +1761,7 @@ SON_Example <- function (sta, trans) {
 #' @family SimulatedModels
 
          
-OpenNetwork <- function(arrivalDistribution, serviceDistribution, s, p, staClients, transitions, historic=FALSE) {
+OpenNetwork <- function(arrivalDistribution=pairlist(c(Exp(20), Exp(30)), c(1,2)), serviceDistribution=c(Exp(100), Exp(25)), s=c(1, 2), p=matrix(c(0.2, 0.25, 0.1, 0), nrow=2, ncol=2), staClients=100, transitions=1000, historic=FALSE) {
   if (!belong(serviceDistribution, "distr")) stop("All elements in argument 'serviceDistribution'must be a valid Class of the Distr package")
   if (!belong(arrivalDistribution[[1]], "distr")) stop("All elements in first position of argument 'serviceDistribution'must be a valid Class of the Distr package")
   if (any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
@@ -1806,8 +2003,8 @@ Pn.SimulatedModel <- function(qm, n) {
 print.SimulatedModel <- function(x, ...) {
   cat("Model: ", class(x)[1])
   if (is.list(x$out$l)) {
-    cat("\nL =\t", x$out$l$mean, "±", x$out$l$var, "\tW =\t", x$out$w$mean, "±", x$out$w$var, "\t\tIntensidad =\t", x$out$rho$mean , "±", x$out$rho$var, "\n")
-    cat("Lq =\t", x$out$lq$mean, "±", x$out$lq$var, "\tWq =\t", x$out$wq$mean, "±", x$out$wq$var, "\tEficiencia =\t", x$out$eff$mean, "±", x$out$eff$var, "\n\n")
+    cat("\nL =\t", x$out$l$mean, "±", x$out$l$error, "\tW =\t", x$out$w$mean, "±", x$out$w$error, "\t\tIntensidad =\t", x$out$rho$mean , "±", x$out$rho$error, "\n")
+    cat("Lq =\t", x$out$lq$mean, "±", x$out$lq$error, "\tWq =\t", x$out$wq$mean, "±", x$out$wq$error, "\tEficiencia =\t", x$out$eff$mean, "±", x$out$eff$error, "\n\n")
   }
   else {
     cat("\nL =\t", x$out$l, "\tW =\t", x$out$w, "\t\tIntensidad =\t", x$out$rho , "\n")
@@ -1854,24 +2051,26 @@ summary.SimulatedModel <- function(object, range=NULL, ...) {
   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"Wq"], type="l")
 }
 
-#' Shows a plot of the evolution of L and Lq during the simulation
+#' Shows a plot of the evolution of a variable during the simulation
 #' 
 #' @param object Simulated Model
 #' @param minrange Start client of simulation
 #' @param maxrange Last client of simulation
+#' @param var Variable to show graphic (L, Lq, W, Wq)
 #' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
 #' @export
-summaryllq <- function(object, minrange, maxrange, graphics="ggplot2") {
+summarySimple <- function(object, minrange, maxrange, var, graphics="ggplot2") {
   if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
-  data <- data.frame(n=minrange:maxrange, "L"=object$out$historic[minrange:maxrange, "L"], "Lq"=object$out$historic[minrange:maxrange, "Lq"])
+  if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
+  eval(parse(text=paste("data <- data.frame(n=minrange:maxrange, '", var, "'=object$out$historic[minrange:maxrange, '", var, "'])", sep="")))
   switch(graphics,
-        "graphics" =  {plot(data$n, data$L, col="red", type="l")
-                       lines(data$n, data$Lq, col="blue")
-                       legend("bottomright", c("L", "Lq"), lty =c(1,1), col = c("red", "blue"), bty="n")
-                       title(main=paste("Evolution of L and Lq", sep=""))},
+        "graphics" =  {eval(parse(text=paste("plot(data$n, data$", var, ", col='red', type='l')\n
+                                              abline(v=object$Staclients, untf = FALSE, col='black')\n
+                                              legend('bottomright', c('", var, "'), lty =c(1), col = c('red'), bty='n')\n
+                                              title(main='Evolution of ", var, ".')", sep="")))},
          "ggplot2" = {data <- melt(data, id.var="n")
-                      qplot(n, value, data=data, geom="line", colour=variable, 
-                      main="Evolution of L and Lq.", ylab="Mean customers")})
+                      eval(parse(text=paste("qplot(n, value, data=data, geom='line', colour=variable, 
+                      main='Evolution of ", var, ".', ylab='Value') + geom_vline(xintercept=object$Staclients, linetype='dotdash')", sep="")))})
 }
 
 
