@@ -1,13 +1,27 @@
 Package: arqas
 Type: Package
 Title: Aplication in R for Queueing Analisis and Simulation
-Version: 1.14
-Date: 27-12-2013
+Version: 0.76
+Date: 01-08-2014
 Author: Borja Varela
-Maintainer: Borja Varela <borja.varela@udc.es>
-Depends: R (>= 1.8.0), distr, reshape, ggplot2, doParallel, foreach
-Suggests: testthat
-Description: This package implements the main characteristics of the following queueing models: M/M/1, M/M/s, M/M/1/k, M/M/s/k, M/M/1/Inf/H, M/M/s/Inf/H, M/M/s/Inf/H with Y replacements, M/M/Inf, Open Jackson Networks and Closed Jackson Networks.
-	Moreover, it is also possible to simulate similar queueing models with any type of arrival or service distribution: G/G/1, G/G/s, G/G/1/k, G/G/s/k, G/G/1/Inf/H, G/G/s/Inf/H, G/G/s/Inf/H with Y replacements, Open Networks and Closed Networks.
+Maintainer: Borja Varela <borja.varela.brea@gmail.es>
+Depends:
+    R (>= 1.8.0),
+    distr,
+    reshape,
+    ggplot2,
+    doParallel,
+    foreach,
+    fitdistrplus,
+    gridExtra
+Suggests:
+    testthat
+Description: This package implements the main characteristics of the following
+    queueing models: M/M/1, M/M/s, M/M/1/k, M/M/s/k, M/M/1/Inf/H, M/M/s/Inf/H,
+    M/M/s/Inf/H with Y replacements, M/M/Inf, Open Jackson Networks and Closed
+    Jackson Networks. Moreover, it is also possible to simulate similar
+    queueing models with any type of arrival or service distribution: G/G/1,
+    G/G/s, G/G/1/k, G/G/s/k, G/G/1/Inf/H, G/G/s/Inf/H, G/G/s/Inf/H with Y
+    replacements, Open Networks and Closed Networks.
 License: GPL (>= 2)
 LazyData: yes
