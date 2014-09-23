@@ -2376,7 +2376,7 @@ summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot
     data <- rbind(data, i)
   }
   if(is.null(data$node)) {
-     ggplot(data, aes(x=t, y=var, group=sim)) + geom_line(size=0.001, colour=416, na.rm=TRUE) + geom_vline(xintercept=data$sta, linetype='dotdash', colour="red") + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
+     ggplot(data, aes(x=t, y=var, group=sim)) + geom_point(size=0.001, colour=276, na.rm=TRUE) + geom_vline(xintercept=data$sta, linetype='dotdash', colour="red") + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
   }
    else {
      ggplot(data, aes(x=t, y=var, colour=node, group=node)) + geom_point(size=0.001, aes(alpha=0.98), na.rm=TRUE) + stat_smooth(se=FALSE, na.rm=TRUE) + geom_vline(xintercept=data$sta, linetype='dotdash', colour="red") + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
