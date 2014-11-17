@@ -23,7 +23,7 @@ combineSimulations <- function(listsims) {
     if (length(intersect(class(listsims), "SimulatedModel")) > 0)
       return(listsims)
     else
-      stop(simpleError("The argument listsims must be a list of queue models"))
+      stop(simpleError("The argument 'listsims' must be a list of queue models"))
   else if (length(listsims) == 1) return(listsims[[1]])
   
   getAttribute <- function(qm, attr) {return(getElement(getElement(qm, "out"), attr))}
@@ -89,15 +89,15 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
 
         tArr <- r(arrivalDistribution) (staClients+nClients)
         tServ <- r(serviceDistribution) (staClients+nClients)
-        if (any(tArr < 0)) stop("There's a problem with de Arrival Distribution, please check the parameters are correct.")
-        if (any(tServ < 0))stop("There's a problem with de Service Distribution, please check the parameters are correct.")
+        if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+        if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
         
         iArr <- iServ <- 1
         sysClients <- simClients<- 0
         a <- 0
         b <- -1
         cron <- d <- c <- 0
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Staclients=staClients, Nclients=nClients)
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, staclients=staClients, nclients=nClients)
         if (historic) hist <- matrix(nrow=(staClients+nClients), ncol=7, dimnames=list(1:(staClients+nClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
         
         while (simClients < staClients) {
@@ -282,7 +282,7 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
         sysClients <- simClients<- 0
         cron <- d <- c <- 0
        
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Staclients=staClients, Nclients=nClients)
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, s=s, staclients=staClients, nclients=nClients)
         tnClients <- numeric(nClients)
         if (historic) hist <- matrix(nrow=(staClients+nClients), ncol=7, dimnames=list(1:(staClients+nClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
         
@@ -490,7 +490,7 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
         cron <- d <- c <- 0
         tnClients <- numeric(nClients)
         
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Staclients=staClients, Nclients=nClients)
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, k=K, staclients=staClients, nclients=nClients)
         if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=7, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
         
         while(simClients < staClients) {
@@ -678,7 +678,7 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
         sysClients <- simClients<- 0
         cron <- d <- c <- 0
         
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, Staclients=staClients,  Nclients=nClients)
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, s=s, k=K, staclients=staClients,  nclients=nClients)
         tnClients <- numeric(nClients)
         if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=7, dimnames=list(1:(staClients+nClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
         
@@ -881,7 +881,7 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
     sysClients <- 0
     simClients <- cron <- c <- d <- 0
     
-    obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, H=H, Staclients=staClients, Nclients=nClients)
+    obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, h=H, staclients=staClients, nclients=nClients)
     tnClients <- numeric(nClients)
     if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=7, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
     
@@ -1066,7 +1066,7 @@ G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
           sysClients <- 0
           simClients <- cron <- c <- d <- 0
           nClicien <- 100/nClients
-          obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Staclients=staClients, Nclients=nClients)
+          obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, s=s, h=H, staclients=staClients, nclients=nClients)
           tnClients <- numeric(nClients)
           if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=7, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
           
@@ -1280,7 +1280,7 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
         sysClients <- 0
         simClients <- cron <- c <- d <- 0
         
-        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Servs=s, H=H, Y=Y, Staclients=staClients, Nclients=nClients)
+        obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, s=s, h=H, y=Y, staclients=staClients, nclients=nClients)
         tnClients <- numeric(nClients)
         if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=7, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
         
@@ -1505,7 +1505,7 @@ G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staC
       a <- 0
       b <- -1
       
-      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, Staclients=staClients, Nclients=nClients)
+      obj <- list(arrivalDistribution = arrivalDistribution, serviceDistribution=serviceDistribution, staclients=staClients, nclients=nClients)
       tnClients <- numeric(nClients)
       if (historic) hist <- matrix(nrow=(nClients+staClients), ncol=7, dimnames=list(1:(nClients+staClients), c("L", "Lq", "W","Wq", "Clients", "Intensity", "tClient")))
       
@@ -1699,7 +1699,7 @@ ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)
       simClients <- 0
       c <- d <- cron <- in_node <- rep(0, nodes)
       
-      obj <- list(serviceDistribution=serviceDistribution, Servs= s, Prob=p, Staclients=staClients, Transitions=transitions, Nclients=nClients)
+      obj <- list(serviceDistribution=serviceDistribution, s= s, prob=p, staclients=staClients, transitions=transitions, nclients=nClients)
       if (historic) hist <- array(dim=c(nodes, 5, staClients+transitions), dimnames=list(1:nodes, c("L", "Lq", "W","Wq", "tClient"), 1:(staClients+transitions)))
       
       sysClients <- floor((nClients)*(s^(-1))/sum(s^-1))
@@ -1925,7 +1925,7 @@ OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribu
       nodesS <- length(s)
       nodesP <- nrow(p)
       
-      obj <- list(arrivalDistribution=arrivalDistribution, serviceDistribution=serviceDistribution, Servs= s, Prob=p, Staclients=staClients, Transitions=transitions)
+      obj <- list(arrivalDistribution=arrivalDistribution, serviceDistribution=serviceDistribution, s= s, prob=p, staclients=staClients, transitions=transitions)
       if (nodesArrival != nodesService || nodesArrival != nodesS || nodesArrival != nodesP || nodesService != nodesS || nodesService != nodesP || nodesS != nodesP)
         stop("The arguments 'arrivalDistribution', 'serviceDistribution', 's' and 'p' must have the same dimensions.")
     
@@ -2303,7 +2303,7 @@ print.SimulatedNetwork <- function(x, ...) {
 #' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
 #' @param depth Number of point printed in the plot
 #' @export
-summarySimple <- function(object, minrange, maxrange, var, graphics, depth) {UseMethod("summarySimple", object)}
+summarySimple <- function(object, minrange, maxrange, var, graphics, ...) {UseMethod("summarySimple", object)}
 
 
 #' @rdname summarySimple
@@ -2311,10 +2311,11 @@ summarySimple <- function(object, minrange, maxrange, var, graphics, depth) {Use
 #' @details
 #' \code{summarySimple.SimulatedModel} implements the function for an object of class SimulatedModel.
 #' @export
-summarySimple.SimulatedModel <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange) {
+summarySimple.SimulatedModel <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange, ...) {
   if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
   if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
-  eval(parse(text=paste("data <- data.frame(t=object$out$historic[minrange:maxrange, 'tClient'], '", var, "'=object$out$historic[minrange:maxrange, '", var, "'])", sep="")))
+  truerange <- seq(minrange, maxrange, length.out=depth)
+  eval(parse(text=paste("data <- data.frame(t=object$out$historic[truerange, 'tClient'], '", var, "'=object$out$historic[truerange, '", var, "'])", sep="")))
   switch(graphics,
         "graphics" =  {eval(parse(text=paste("plot(data$t, data$", var, ", col='red', type='l')\n
                                               abline(v=object$Staclients, untf = FALSE, col='black')\n
@@ -2339,9 +2340,10 @@ summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, grap
                                               legend('bottomright', c('", var, "'), lty =c(1), col = c('red'), bty='t')\n
                                               title(main='Evolution of ", var, "')", sep="")))},
          "ggplot2" = {
-                      cumPlot <- qplot(x=ifelse(is.na(aux<-object$out$historic[1, "tClient", minrange:maxrange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[1, var, minrange:maxrange]), 0, aux), geom="line", colour="red")
+                      truerange <- seq(minrange, maxrange, length.out=depth)
+                      cumPlot <- qplot(x=ifelse(is.na(aux<-object$out$historic[1, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[1, var, truerange]), 0, aux), geom="line", colour="red")
                       for(node in 2:(dim(object$out$historic)[1])) {
-                        cumPlot <- cumPlot + geom_line(aes(x=ifelse(is.na(aux<-object$out$historic[node, "tClient", minrange:maxrange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[node, var, minrange:maxrange]), 0, aux)), colour=colours(distinct=TRUE)[node*2+1]) + theme(element_rect(colour = node*2+1))
+                        cumPlot <- cumPlot + geom_line(aes(x=ifelse(is.na(aux<-object$out$historic[node, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[node, var, truerange]), 0, aux)), colour=colours(distinct=TRUE)[node*2+1]) + theme(element_rect(colour = node*2+1))
                         #data <- melt(data[node,,], id.vars=c("t"))
                         #eval(parse(text=paste("qplot(t, value, data=data, geom='line', colour=node, 
                         #main='Evolution of ", var, ".', ylab='", var , "') + geom_vline(xintercept=object$out$historic[1, 'tClient', object$Staclients], linetype='dotdash') + theme(legend.position='none')", sep="")))
@@ -2356,59 +2358,37 @@ summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, grap
 #' @details
 #' \code{summarySimple.list} implements the function for an object of class list
 #' @export
-summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=100) {
-  index <- 1
-  rawdata <- lapply(object, function(qm){
-                        array <- getElement(getElement(qm, "out"), "historic")
-                        if (is.null(array)) stop(simpleError("The variable 'historic' must be active to show the plot"))
-                        res <- NULL
-                        if (length(dim(array)) == 2) {
-                          res <- data.frame(var=array[seq(minrange, maxrange, length.out=depth),var], t=array[seq(minrange, maxrange, length.out=depth), "tClient"], sta=rep(array[qm$Staclient, "tClient"], depth), sim = rep(index, depth))
-                        } else {
-                          index <- seq(minrange, maxrange, length.out=depth)
-                          res <- data.frame(var=matrix(array[,var, index ], ncol=1), t=matrix(array[,"tClient", index], ncol=1), node=matrix(sapply(1:dim(array)[1], function(i){rep(i, length(index))}), ncol=1), sta=rep(array[1, "tClient", qm$Staclient], depth))
-                        }
-                        index <<- index + 1
-                        return(res)
-                        })
-  data <- rawdata[[1]]
-  for(i in rawdata[-1]) {
-    data <- rbind(data, i)
-  }
-  if(is.null(data$node)) {
-     ggplot(data, aes(x=t, y=var, group=sim)) + geom_point(size=0.001, colour=276, na.rm=TRUE) + geom_vline(xintercept=data$sta, linetype='dotdash', colour="red") + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
-  }
-   else {
-     ggplot(data, aes(x=t, y=var, colour=node, group=node)) + geom_point(size=0.001, aes(alpha=0.98), na.rm=TRUE) + stat_smooth(se=FALSE, na.rm=TRUE) + geom_vline(xintercept=data$sta, linetype='dotdash', colour="red") + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
-  }
+summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange+1, nSimulation=1) {
+      if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
+      if (!is.numeric(nSimulation)) nSimulation <- 1
+      firstHistoric <- object[[1]]$out$historic
+      if (length(dim(firstHistoric)) > 2)
+        plotdata <- data.frame(x=NULL, val=NULL, sim=NULL)
+      else
+        plotdata <- data.frame(x=NULL, val=NULL, sim=NULL, node=NULL)
+      index <- 1
+      dimensions <- NULL
+      lapply(object, function(qm){
+          historic <- getElement(getElement(qm, "out"), "historic")
+          dimensions <<- dim(historic)
+          truerange <- seq(minrange, maxrange, lenght.out=depth)
+          if (is.null(historic)) stop(simpleError("The argument 'historic' must be TRUE to show the plot."))
+          if (length(dim(historic)) == 2)
+            plotdata <<- rbind(plotdata, data.frame(x=truerange, val=historic[truerange, var], sim=rep(index, length(truerange))))
+          else {
+            if (var == "Clients" || var=="Intensity") stop("The argument 'var' can't be 'Clients' for a Network.")
+            for (i in 1:dimensions[1])
+              plotdata <<- rbind(plotdata, data.frame(x=truerange, val=historic[i, var, truerange], sim=rep(index, length(truerange)), node=rep(i, length(truerange))))
+          }
+          index <<- index+1
+      })
+      if (length(dimensions) == 2) 
+          if (var == "Clients")
+            ggplot(subset(plotdata, sim == nSimulation), aes(x=x, y=val, order=factor(sim))) + geom_histogram(stat="identity", na.rm=TRUE) + ggtitle(paste("Evolution of ", var, " in simulation ", nSimulation, sep="")) + theme(legend.position="none")
+          else
+            ggplot(plotdata, aes(x=x, y=val, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
+      else 
+        ggplot(plotdata, aes(x=x, y=val, colour=factor(node), alpha=0.95, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + scale_colour_discrete(name="Nodes") + scale_alpha_continuous(name="", breaks=NULL, labels=NULL)
 }
 
-# summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot2") {
-#   lcolors <- colors(distinct=TRUE)
-#   switch(graphics,
-#          "ggplot2" = {
-#             cumplot <- summarySimple(object[[1]], minrange, maxrange, var, graphics)
-#             aux<-10
-#             for (i in object[-1]){
-#                 actualplot <- summarySimple(i, minrange, maxrange, var, graphics)
-#                 cumplot <- cumplot + geom_line() + 
-#                            geom_line(mapping=actualplot$mapping, colour=lcolors[aux]) 
-#                 aux <- aux + 10
-#             }
-#             cumplot
-#          }
-#   )
-# }
 
-# summarywwq <- function(object, minrange, maxrange, graphics="ggplot2") {
-#   if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
-#   data <- data.frame(n=minrange:maxrange, "W"=object$out$historic[minrange:maxrange, "W"], "Wq"=object$out$historic[minrange:maxrange, "Wq"])
-#   switch(graphics,
-#          "graphics" =  {plot(data$n, data$W, col="red", type="l")
-#                         lines(data$n, data$Wq, col="blue")
-#                         legend("bottomright", c("W", "Wq"), lty =c(1,1), col = c("red", "blue"), bty="n")
-#                         title(main=paste("Evolution of W and Wq", sep=""))},
-#          "ggplot2" = {data <- melt(data, id.var="n")
-#                       qplot(n, value, data=data, geom="line", colour=variable, 
-#                             main="Evolution of W and Wq.", ylab="Mean time")})
-# }
