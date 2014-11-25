@@ -2447,7 +2447,6 @@ summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot
           historic <- getElement(getElement(qm, "out"), "historic")
           dimensions <<- dim(historic)
           truerange <- seq(minrange, maxrange, length.out=depth)
-          print(truerange)
           if (is.null(historic)) stop(simpleError("The argument 'historic' must be TRUE to show the plot."))
           if (length(dim(historic)) == 2)
             plotdata <<- rbind(plotdata, data.frame(x=truerange, val=historic[truerange, var], sim=rep(index, length(truerange))))
