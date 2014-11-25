@@ -79,4 +79,30 @@ In this function n, should have the same length than the number of nodes in the 
 
 \code{Pn.SimulatedModel} implements the method for a SimulatedModel model
 }
+\examples{
+qm <- M_M_1_INF_H(20, 60, 10)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+qm <- M_M_S_INF_H(10, 40, 5, 8)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+qm <- M_M_INF(15, 23)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+qm <- M_M_1(60, 80)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+qm <- M_M_S(60, 20, 4)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+qm <- M_M_1_K(60, 10, 3)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+qm <- M_M_S_K(60, 10, 2, 5)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Pn(qm, 0:5)
+}
 

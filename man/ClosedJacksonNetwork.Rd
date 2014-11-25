@@ -19,10 +19,10 @@ ClosedJacksonNetwork(mu = c(5, 5, 10, 15), s = c(2, 2, 1, 1),
 \value{
 Returns the next information of a Closed Jackson Network model:
 \item{rho}{Traffic intensity: \eqn{\rho}}
-\item{l}{Expected number of customers in the system: \eqn{L}}
-\item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-\item{w}{Expected waiting time in the system: \eqn{W}}
-\item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+\item{l}{Number of customers in the system: \eqn{L}}
+\item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+\item{w}{Waiting time in the system: \eqn{W}}
+\item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
 \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 }
 \description{

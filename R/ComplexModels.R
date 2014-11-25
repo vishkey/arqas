@@ -10,17 +10,19 @@
 #' \item{barlambda}{Mean effective arrival rate: \ifelse{latex}{\eqn{\bar{\rho}}}{\out{<i>&#862;&lambda;</i>}}}
 #' \item{cn}{Coefficients used in the computation of \ifelse{latex}{\eqn{P_n}: \eqn{C_n}}{\out{P<sub>n</sub>: <i>C<sub>n</sub></i>}}}
 #' \item{p0}{Probability of empty system: \ifelse{latex}{\eqn{P_{0}}}{\out{<i>P<sub>0</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_q}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_q}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{l}{Number of customers in the system: \eqn{L}}
+#' \item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_q}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Waiting time in the system: \eqn{W}}
+#' \item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_q}}{\out{<i>W<sub>q</sub></i>}}}
 #' \item{eff}{System Efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub>)</i>}}}
+#' @examples
+#' M_M_1_INF_H(20, 60, 10)
 #' @export 
 #' @family AnaliticalModels
 M_M_1_INF_H <- function(lambda=3, mu=6, h=5) {
-  if (lambda <= 0) stop("Argument 'lambda' must be greather than zero")
-  if (mu <= 0) stop("Argument 'mu' must be greather than zero")
-  if (h < 1) stop("Argument 'h' must be equal or greater than one")
+  if (!is.numeric(lambda) | lambda <= 0) stop("Argument 'lambda' must be greather than zero")
+  if (!is.numeric(mu)     | mu <= 0) stop("Argument 'mu' must be greather than zero")
+  if (!is.numeric(h)      | h < 1) stop("Argument 'h' must be equal or greater than one")
   
   obj <- MarkovianModel(Exp(lambda), Exp(mu))
   
@@ -52,6 +54,10 @@ M_M_1_INF_H <- function(lambda=3, mu=6, h=5) {
 #' @method Pn M_M_1_INF_H
 #' @details
 #' \code{Pn.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_1_INF_H(20, 60, 10)
+#' #Probability of 0,1,2,3,4 and 5 customers in the system
+#' Pn(qm, 0:5)
 #' @export
 Pn.M_M_1_INF_H <- function(qm, n) {
   Pn.M_M_S_INF_H(qm, n)
@@ -61,6 +67,8 @@ Pn.M_M_1_INF_H <- function(qm, n) {
 #' @method maxCustomers M_M_1_INF_H
 #' @details
 #' \code{maxCustomers.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
+#' @examples
+#' maxCustomers(M_M_1_INF_H(20, 60, 10))
 #' @export
 maxCustomers.M_M_1_INF_H <- function(qm) {
   maxCustomers.M_M_S_INF_H(qm)
@@ -70,6 +78,10 @@ maxCustomers.M_M_1_INF_H <- function(qm) {
 #' @method Qn M_M_1_INF_H
 #' @details
 #' \code{Qn.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_1_INF_H(20, 60, 10)
+#' #Probability of 0,1,2,3,4 and 5 customers in the queue
+#' Qn(qm, 0:5)
 #' @export
 Qn.M_M_1_INF_H <- function(qm, n) {
   Qn.M_M_S_INF_H(qm, n)
@@ -79,6 +91,10 @@ Qn.M_M_1_INF_H <- function(qm, n) {
 #' @method FWq M_M_1_INF_H
 #' @details
 #' \code{FWq.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_1_INF_H(20, 60, 10)
+#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the queue
+#' FWq(qm, c(0, 0.25, 0.5))
 #' @export
 FWq.M_M_1_INF_H <- function(qm, x) {
   FWq.M_M_S_INF_H(qm, x)
@@ -88,6 +104,10 @@ FWq.M_M_1_INF_H <- function(qm, x) {
 #' @method FW M_M_1_INF_H
 #' @details
 #' \code{FW.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_1_INF_H(20, 60, 10)
+#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the system
+#' FW(qm, c(0, 0.25, 0.5))
 #' @export
 FW.M_M_1_INF_H <- function(qm, x) {
   minval <- min(x)
@@ -120,18 +140,20 @@ FW.M_M_1_INF_H <- function(qm, x) {
 #' \item{barlambda}{Mean effective arrival rate: \ifelse{latex}{\eqn{\bar{\rho}}}{\out{<i>&#862;&lambda;</i>}}}
 #' \item{cn}{Coefficients used in the computation of \ifelse{latex}{\eqn{P_{n}}: \eqn{C_n}}{\out{P<sub>n</sub>: <i>C<sub>n</sub></i>}}}
 #' \item{p0}{Probability of empty system: \ifelse{latex}{\eqn{P_{0}}}{\out{<i>P<sub>0</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_q}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_q}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{l}{Number of customers in the system: \eqn{L}}
+#' \item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_q}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Waiting time in the system: \eqn{W}}
+#' \item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_q}}{\out{<i>W<sub>q</sub></i>}}}
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 #' @export
+#' @examples
+#' M_M_S_INF_H(10, 40, 5, 8)
 #' @family AnaliticalModels
 M_M_S_INF_H <- function(lambda=3, mu=6, s=3, h=5) {
-  if (lambda <= 0) stop("Argument 'lambda' must be greather than zero")
-  if (mu <= 0) stop("Argument 'mu' must be greather than zero")
-  if (s <= 0) stop ("Argument 's' must be greather than zero")
-  if (s > h) stop("Argument 'h' must be equal or greater than argument 's'")
+  if (!is.numeric(lambda) | lambda <= 0) stop("Argument 'lambda' must be greather than zero")
+  if (!is.numeric(mu)     | mu <= 0) stop("Argument 'mu' must be greather than zero")
+  if (!is.numeric(s)      | s <= 0) stop ("Argument 's' must be greather than zero")
+  if (!is.numeric(h)      | (s > h)) stop("Argument 'h' must be equal or greater than argument 's'")
   
   obj <- MarkovianModel(Exp(lambda), Exp(mu))
   
@@ -163,10 +185,14 @@ M_M_S_INF_H <- function(lambda=3, mu=6, s=3, h=5) {
 #' @method Pn M_M_S_INF_H
 #' @details
 #' \code{Pn.M_M_S_INF_H} implements the method for a M/M/s/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_S_INF_H(10, 40, 5, 8)
+#' #Probability of 0,1,2,3,4 and 5 customers in the system
+#' Pn(qm, 0:5)
 #' @export
 Pn.M_M_S_INF_H <- function(qm, n) {
   #Comprobamos que n sea entero
-  if (!all.equal(n, as.integer(n))) stop("P(n): Argument 'n' must be integer")
+  if (!all.equal(n, as.integer(n))) stop("P(n): Argument 'n' must be an integer")
   if (any(is.na(n))) stop("P(n): Argument 'n' invalid")
   
   minval <- min(n)
@@ -183,6 +209,8 @@ Pn.M_M_S_INF_H <- function(qm, n) {
 #' @method maxCustomers M_M_S_INF_H
 #' @details
 #' \code{maxCustomers.M_M_S_INF_H} implements the method for a M/M/s/\eqn{\infty}/H queueing model
+#' @examples
+#' maxCustomers(M_M_S_INF_H(10, 40, 5, 8))
 #' @export
 maxCustomers.M_M_S_INF_H <- function(qm) {
   return(qm$h)
@@ -193,6 +221,10 @@ maxCustomers.M_M_S_INF_H <- function(qm) {
 #' @method Qn M_M_S_INF_H
 #' @details
 #' \code{Qn.M_M_S_INF_H} implements the method for a M/M/s/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_S_INF_H(10, 40, 5, 8)
+#' #Probability of 0,1,2,3,4 and 5 customers in the queue
+#' Qn(qm, 0:5)
 #' @export
 Qn.M_M_S_INF_H <- function(qm, n) {
   #Comprobamos que n sea entero
@@ -210,6 +242,10 @@ Qn.M_M_S_INF_H <- function(qm, n) {
 #' @method FWq M_M_S_INF_H
 #' @details
 #' \code{FWq.M_M_S_INF_H} implements the method for a M/M/s/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_S_INF_H(10, 40, 5, 8)
+#' #Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+#' FWq(qm, c(0, 0.25, 0.5))
 #' @export
 FWq.M_M_S_INF_H <- function(qm, x) {
   minval <- min(x)
@@ -233,6 +269,10 @@ FWq.M_M_S_INF_H <- function(qm, x) {
 #' @method FW M_M_S_INF_H
 #' @details
 #' \code{FW.M_M_S_INF_H} implements the method for a M/M/s/\eqn{\infty}/H queueing model
+#' @examples
+#' qm <- M_M_S_INF_H(10, 40, 5, 8)
+#' #Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+#' FW(qm, c(0, 0.25, 0.5))
 #' @export
 FW.M_M_S_INF_H <- function(qm, x) {
   minval <- min(x)
@@ -261,19 +301,21 @@ FW.M_M_S_INF_H <- function(qm, x) {
 #' \item{barlambda}{Effective arrival rate: \ifelse{latex}{\eqn{\bar{\lambda}}}{\out{<i>&#862;&lambda;</i>}}}
 #' \item{cn}{Coefficients used in the computation of \ifelse{latex}{\eqn{P_{n}}: \eqn{C_n}}{\out{P<sub>n</sub>: <i>C<sub>n</sub></i>}}}
 #' \item{p0}{Probability of empty system: \ifelse{latex}{\eqn{P_{0}}}{\out{<i>P<sub>0</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_q}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_q}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{l}{Number of customers in the system: \eqn{L}}
+#' \item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_q}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Waiting time in the system: \eqn{W}}
+#' \item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_q}}{\out{<i>W<sub>q</sub></i>}}}
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' @examples
+#' M_M_S_INF_H_Y(3, 6, 2, 5, 8)
 #' @export
 #' @family AnaliticalModels
 M_M_S_INF_H_Y <- function(lambda=3, mu=6, s=3, h=5, y=3) {
-  if (lambda <= 0) stop("Argument 'lambda' must be greather than zero")
-  if (mu <= 0) stop("Argument 'mu' must be greather than zero")
-  if (s <= 0) stop ("Argument 's' must be greather than zero")
-  if (h <= 0) stop("Argument 'h' must be greather than zero")
-  if (y <= 0) stop("Argument 'y' must be greather than zero")
+  if (!is.numeric(lambda) | lambda <= 0) stop("Argument 'lambda' must be greather than zero")
+  if (!is.numeric(mu)     | mu <= 0) stop("Argument 'mu' must be greather than zero")
+  if (!is.numeric(s)      | s <= 0) stop ("Argument 's' must be greather than zero")
+  if (!is.numeric(h)      | h <= 0) stop("Argument 'h' must be greather than zero")
+  if (!is.numeric(y)      | y <= 0) stop("Argument 'y' must be greather than zero")
   
   obj <- MarkovianModel(Exp(lambda), Exp(mu))
   
@@ -316,10 +358,14 @@ M_M_S_INF_H_Y <- function(lambda=3, mu=6, s=3, h=5, y=3) {
 #' @method Pn M_M_S_INF_H_Y
 #' @details
 #' \code{Pn.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H/Y queueing model
+#' @examples
+#' qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#' #Probability of 0,1,2,3,4 and 5 customers in the system
+#' Pn(qm, 0:5)
 #' @export
 Pn.M_M_S_INF_H_Y <- function(qm, n) {
   #Comprobamos que n sea entero
-  if (!all.equal(n, as.integer(n))) stop("P(n): Argument 'n' must be integer")
+  if (!all.equal(n, as.integer(n))) stop("P(n): Argument 'n' must be an integer")
   if (any(is.na(n))) stop("P(n): Argument 'n' invalid")
   
   minval <- min(n)
@@ -336,6 +382,8 @@ Pn.M_M_S_INF_H_Y <- function(qm, n) {
 #' @method maxCustomers M_M_S_INF_H_Y
 #' @details
 #' \code{maxCustomers.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H/Y queueing model
+#' @examples
+#' maxCustomers(M_M_S_INF_H_Y(3, 6, 2, 5, 8))
 #' @export
 maxCustomers.M_M_S_INF_H_Y<- function(qm) {
   return(qm$y + qm$h)
@@ -346,6 +394,10 @@ maxCustomers.M_M_S_INF_H_Y<- function(qm) {
 #' @method Qn M_M_S_INF_H_Y
 #' @details
 #' \code{Qn.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H with Y replacements queueing model
+#' @examples
+#' qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#' #Probability of 0,1,2,3,4 and 5 customers in the queue
+#' Qn(qm, 0:5)
 #' @export
 Qn.M_M_S_INF_H_Y <- function(qm, n) {
   #Comprobamos que n sea entero
@@ -367,6 +419,10 @@ Qn.M_M_S_INF_H_Y <- function(qm, n) {
 #' @method FWq M_M_S_INF_H_Y
 #' @details
 #' \code{FWq.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H with Y replacements queueing model
+#' @examples
+#' qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#' #Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+#' FWq(qm, c(0, 0.25, 0.5))
 #' @export
 FWq.M_M_S_INF_H_Y <- function(qm, x) {
   return(FWq.M_M_S_INF_H(qm,x))
@@ -375,7 +431,11 @@ FWq.M_M_S_INF_H_Y <- function(qm, x) {
 #' @rdname FW
 #' @method FW M_M_S_INF_H_Y
 #' @details
-#' \code{FW.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H/ with Y replacements queueing model
+#' \code{FW.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H with Y replacements queueing model
+#' @examples
+#' qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#' #Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+#' FW(qm, c(0, 0.25, 0.5))
 #' @export
 FW.M_M_S_INF_H_Y <- function(qm, x) {
   return(FW.M_M_S_INF_H(qm, x))
@@ -390,16 +450,18 @@ FW.M_M_S_INF_H_Y <- function(qm, x) {
 #' \item{rho}{Constant coefficient: \eqn{\lambda/\mu}}
 #' \item{barrho}{Traffic intensity: \ifelse{latex}{\eqn{\bar{\rho}}}{\out{<i>&#862;&rho;</i>}}}
 #' \item{p0}{Probability of empty system: \ifelse{latex}{\eqn{P_{0}}}{\out{<i>P<sub>0</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_q} (\eqn{L_q} = 0 in this model)}{\out{<i>L<sub>q</sub> (L<sub>q</sub> = 0 in this model)</i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_q} (\eqn{W_q} = 0 in this model)}{\out{<i>W<sub>q</sub> (W<sub>q</sub> = 0 in this model)</i>}}}
+#' \item{l}{Number of customers in the system: \eqn{L}}
+#' \item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_q} (\eqn{L_q} = 0 in this model)}{\out{<i>L<sub>q</sub> (L<sub>q</sub> = 0 in this model)</i>}}}
+#' \item{w}{Waiting time in the system: \eqn{W}}
+#' \item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_q} (\eqn{W_q} = 0 in this model)}{\out{<i>W<sub>q</sub> (W<sub>q</sub> = 0 in this model)</i>}}}
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' @examples
+#' M_M_INF(15, 23)
 #' @export 
 #' @family AnaliticalModels
 M_M_INF <- function(lambda=3, mu=6) {
-  if (lambda <= 0) stop("Argument 'lambda' must be greather than zero")
-  if (mu <= 0) stop("Argument 'mu' must be greather than zero")
+  if (!is.numeric(lambda) | lambda <= 0) stop("Argument 'lambda' must be greather than zero")
+  if (!is.numeric(mu)     | mu <= 0) stop("Argument 'mu' must be greather than zero")
   
   obj <- MarkovianModel(Exp(lambda), Exp(mu))
   
@@ -419,10 +481,14 @@ M_M_INF <- function(lambda=3, mu=6) {
 #' @method Pn M_M_INF
 #' @details
 #' \code{Pn.M_M_INF} implements the method for a M_M_INF queueing model
+#' @examples
+#' qm <- M_M_INF(15, 23)
+#' #Probability of 0,1,2,3,4 and 5 customers in the system
+#' Pn(qm, 0:5)
 #' @export
 Pn.M_M_INF <- function(qm, n) {
   #Comprobamos que n sea entero
-  if (!all.equal(n, as.integer(n))) stop("P(n): Argument 'n' must be integer")
+  if (!all.equal(n, as.integer(n))) stop("P(n): Argument 'n' must be an integer")
   if (any(is.na(n))) stop("P(n): Argument 'n' invalid")
   
   minval <- min(n)
@@ -442,6 +508,10 @@ Pn.M_M_INF <- function(qm, n) {
 #' @method FW M_M_INF
 #' @details
 #' \code{FW.M_M_INF} implements the method for a M/M/\eqn{\infty} queueing model
+#' @examples
+#' qm <- M_M_INF(15, 23)
+#' #Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+#' FW(qm, c(0, 0.25, 0.5))
 #' @export
 FW.M_M_INF <- function(qm, x) {
   rep(0, length(x))
@@ -451,6 +521,10 @@ FW.M_M_INF <- function(qm, x) {
 #' @method FWq M_M_INF
 #' @details
 #' \code{FWq.M_M_INF} implements the method for a M/M/\eqn{\infty} queueing model
+#' @examples
+#' qm <- M_M_INF(15, 23)
+#' #Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+#' FWq(qm, c(0, 0.25, 0.5))
 #' @export
 FWq.M_M_INF <- function(qm, x) {
   rep(0, length(x))

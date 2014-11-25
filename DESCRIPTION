@@ -8,8 +8,10 @@ Maintainer: Borja Varela <borja.varela.brea@gmail.es>
 Depends:
     R (>= 1.8.0),
     distr,
+    methods,
     reshape,
     ggplot2,
+    iterators,
     doParallel,
     foreach,
     fitdistrplus,

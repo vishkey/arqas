@@ -9,7 +9,7 @@ goodnessFit(lfitdata)
 \item{lfitdata}{a list of fitted data}
 }
 \value{
-the p-values of the chi-square test and Kolmogorov-Smirnov test
+the p-values and the statistics values of the chi-square test and Kolmogorov-Smirnov test
 }
 \description{
 Computes the p-value of the chi-square test and Kolmogorov-Smirnov test and each statistic value

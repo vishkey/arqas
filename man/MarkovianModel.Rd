@@ -14,8 +14,10 @@ defined in \pkg{distr} package)}
 }
 \value{
 An object of class \code{MarkovianModel}, a list with the following components:
-\item{arrivalDistribution}{Arrival distribution}
-\item{serviceDistribution}{Service distribution}
+\item{arrivalDistribution}{Arrival distribution (object of S4-class \code{distr}
+defined in \pkg{distr} package)}
+\item{serviceDistribution}{Service distribution (object of S4-class \code{distr}
+defined in \pkg{distr} package)}
 }
 \description{
 Constructor for \code{MarkovianModel} class.

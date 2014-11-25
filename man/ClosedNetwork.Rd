@@ -10,7 +10,8 @@ ClosedNetwork(serviceDistribution = c(Exp(5), Exp(5), Exp(10), Exp(15)),
   nsim = 10, nproc = 1)
 }
 \arguments{
-\item{serviceDistribution}{Service distributions for the nodes of the network}
+\item{serviceDistribution}{Service distributions for the nodes of the network (Each element must be an object of S4-class \code{distr}
+defined in \pkg{distr} package)}
 
 \item{s}{Vector of servers at each node}
 
@@ -30,18 +31,27 @@ ClosedNetwork(serviceDistribution = c(Exp(5), Exp(5), Exp(10), Exp(15)),
 }
 \value{
 Returns the next information of a Closed Network model:
-\item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_n}}{\out{<i>P<sub>n</sub></i>}}}
-\item{l}{Vector of expected number of customers in the nodes: \eqn{L}}
-\item{lq}{Vector of expected number of customers in the queues of the nodes: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-\item{lqt}{Expected number of customers in the all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L_<sub>qTotal</sub></i>}}}
-\item{w}{Vector of expected waiting times in the nodes: \eqn{W}}
-\item{wq}{Vector of expected waiting times in the queues of the nodes: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-\item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-\item{rho}{Traffic intensity: \eqn{\rho}}
+\item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_n}}{\out{<i>P<sub>n</sub></i>}}}
+\item{l}{Vector of empirical number of customers in the nodes: \eqn{L}}
+\item{lq}{Vector of empirical number of customers in the queues of the nodes: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+\item{lqt}{Empirical number of customers in the all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L_<sub>qTotal</sub></i>}}}
+\item{w}{Vector of empirical waiting times in the nodes: \eqn{W}}
+\item{wq}{Vector of empirical waiting times in the queues of the nodes: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+\item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+\item{rho}{Empirical traffic intensity: \eqn{\rho}}
 \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation.}
 }
 \description{
 Obtains the main characteristics of a Closed Network model by simulation
+}
+\examples{
+ClosedNetwork(serviceDistribution = c(Exp(5), Exp(5), Exp(10), Exp(15)),
+              s                   = c(2,2,1,1),
+              p                   = array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)),
+              nClient             = 3,
+              staClients          = 10,
+              transitions         = 100,
+              nsim                = 10)
 }
 \seealso{
 Other SimulatedModels: \code{\link{G_G_1_INF_H}};

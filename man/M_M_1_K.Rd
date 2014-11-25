@@ -17,14 +17,17 @@ Returns the next information of a M/M/1/K model:
 \item{rho}{Constant coefficient: \eqn{\lambda/\rho}}
 \item{barrho}{Traffic intensity: \ifelse{latex}{\eqn{\bar{\rho}}}{\out{<i>&#862;&rho;</i>}}}
 \item{barlambda}{Effective arrival rate: \ifelse{latex}{\eqn{\bar{\lambda}}}{\out{<i>&#862;&lambda;</i>}}}
-\item{l}{Expected mean number of customers in the system: \eqn{L}}
-\item{lq}{Expected mean number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-\item{w}{Expected waiting time in the system: \eqn{W}}
-\item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-\item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+\item{l}{Mean number of customers in the system: \eqn{L}}
+\item{lq}{Mean number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+\item{w}{Waiting time in the system: \eqn{W}}
+\item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+\item{eff}{Efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 }
 \description{
 Obtains the main characteristics of a M/M/1/K queueing model
+}
+\examples{
+M_M_1_K(60, 10, 3)
 }
 \seealso{
 Other AnaliticalModels: \code{\link{ClosedJacksonNetwork}};

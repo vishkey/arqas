@@ -7,7 +7,7 @@
 \alias{maxCustomers.M_M_S_INF_H_Y}
 \alias{maxCustomers.M_M_S_K}
 \alias{maxCustomers.MarkovianModel}
-\title{Returns the maximun value for n that satisfies \ifelse{latex}{P_n}{\out{P<sub>n</sub>}} > 0}
+\title{Returns the maximun value for n that satisfies \ifelse{latex}{P_{n}}{\out{P<sub>n</sub>}} > 0}
 \usage{
 \method{maxCustomers}{M_M_1_INF_H}(qm)
 
@@ -27,7 +27,7 @@ maxCustomers(qm)
 \item{qm}{object MarkovianModel}
 }
 \description{
-Returns the maximun value for n that satisfies \ifelse{latex}{P_n}{\out{P<sub>n</sub>}} > 0
+Returns the maximun value for n that satisfies \ifelse{latex}{P_{n}}{\out{P<sub>n</sub>}} > 0
 }
 \details{
 \code{maxCustomers.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
@@ -41,5 +41,12 @@ Returns the maximun value for n that satisfies \ifelse{latex}{P_n}{\out{P<sub>n<
 \code{maxCustomers.M_M_1_K} implements the method for a M/M/1/K queueing model
 
 \code{maxCustomers.M_M_S_K} implements the method for a M/M/S/K queueing model
+}
+\examples{
+maxCustomers(M_M_1_INF_H(20, 60, 10))
+maxCustomers(M_M_S_INF_H(10, 40, 5, 8))
+maxCustomers(M_M_S_INF_H_Y(3, 6, 2, 5, 8))
+maxCustomers(M_M_1_K(60, 10, 3))
+maxCustomers(M_M_S_K(60, 10, 2, 5))
 }
 

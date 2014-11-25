@@ -23,18 +23,25 @@ Tamdem <- function(n) {
 #' @return
 #' Returns the next information of an Open Jackson network model:
 #' \item{rho}{Traffic intensity: \eqn{\rho}}
-#' \item{l}{Vector with the expected number of customers in the nodes: \eqn{L}}
-#' \item{lq}{Vector of expected number of customers in the queue of each node: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Vector of expected waiting time in each node: \eqn{W}}
-#' \item{wq}{Vector of expected waiting time in the queue of each node: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{lt}{Expected number of customers in the network: \ifelse{latex}{\eqn{L_{Total}}}{\out{<i>L<sub>Total</sub></i>}}}
-#' \item{lqt}{Expected number of customers in all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L<sub>qTotal</sub><i>}}}
-#' \item{wt}{Total expected waiting time in the network: \ifelse{latex}{\eqn{W_{Total}}}{\out{<i>W<sub>Total</sub></i>}}}
-#' \item{wqt}{Total expected waiting time in all queues: \ifelse{latex}{\eqn{W_{qTotal}}}{\out{<i>W<sub>qTotal</sub></i>}}}
+#' \item{l}{Vector with the number of customers in the nodes: \eqn{L}}
+#' \item{lq}{Vector with the number of customers in the queue of each node: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Vector with the waiting time in each node: \eqn{W}}
+#' \item{wq}{Vector with the waiting time in the queue of each node: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{lt}{Number of customers in the network: \ifelse{latex}{\eqn{L_{Total}}}{\out{<i>L<sub>Total</sub></i>}}}
+#' \item{lqt}{Number of customers in all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L<sub>qTotal</sub><i>}}}
+#' \item{wt}{Total waiting time in the network: \ifelse{latex}{\eqn{W_{Total}}}{\out{<i>W<sub>Total</sub></i>}}}
+#' \item{wqt}{Total waiting time in all queues: \ifelse{latex}{\eqn{W_{qTotal}}}{\out{<i>W<sub>qTotal</sub></i>}}}
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' @examples
+#' OpenJacksonNetwork()
 #' @export
 #' @family AnaliticalModels
 OpenJacksonNetwork <- function(lambda=c(20, 30), mu=c(100, 25), s=c(1,2), p=matrix(c(0.2, 0.25, 0.1, 0), nrow=2, ncol=2)) {
+  if (!is.numeric(lambda)) stop("Argument 'lambda' must be numeric.")
+  if (!is.numeric(mu)) stop("Argument 'mu' must be numeric.")
+  if (!is.numeric(s)) stop("Argument 's' must be numeric.")
+  if (!is.numeric(p)) stop("Argument 'p' must be numeric.")
+  
   #Comprobar parametros de entrada tienen la misma longitud, y P cumple las condiciones  
   sizelambda <- length(lambda)
   sizemu <- length(mu)
@@ -175,9 +182,9 @@ calculateG <- function(ps) {
   res <- matrix(c(1), nrow=ps$k, ncol=(ps$n+1))
   for(i in 2:(ps$n+1)) {
     res[1,i] <- f_close(ps, 1, i-1)
-    for(j in 2:ps$k) {
-      res[j, i] <- sum(res[j-1, i:1] * f_close(ps, j, 0:(i-1)))
-    }
+    if (ps$k > 1)
+      for(j in 2:ps$k)
+        res[j, i] <- sum(res[j-1, i:1] * f_close(ps, j, 0:(i-1)))
   }
   return(res)
   
@@ -190,6 +197,7 @@ calculateG <- function(ps) {
 #' @return P(i) in the last node
 #' @keywords internal
 pnlast <- function(ps, i) {
+  if (ps$k == 1) return(1)
   if (min(i) < 0 || max(i)>ps$n) stop(paste("Pnlast: Argument 'i' must be between 0 and ", ps$n, sep=""))
   return((f_close(ps, ps$k, i) * ps$g[ps$k-1, ps$n-i+1])/ps$g[ps$k, ps$n+1])
 }
@@ -214,41 +222,52 @@ CN_example <- function() {
 #' @param n Number of customers in the network
 #' @return Returns the next information of a Closed Jackson Network model:
 #' \item{rho}{Traffic intensity: \eqn{\rho}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{l}{Number of customers in the system: \eqn{L}}
+#' \item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Waiting time in the system: \eqn{W}}
+#' \item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 #' @export 
 #' @family AnaliticalModels
 ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)), n=10) {
+  if (!is.numeric(mu)) stop("Argument 'mu' must be numeric.")
+  if (!is.numeric(s)) stop("Argument 's' must be numeric.")
+  if (!is.numeric(p)) stop("Argument 'p' must be numeric.")
+  if (!is.numeric(n)) stop("Argument 'n' must be numeric.")
+  
   sizemu <- length(mu)
   sizes <- length(s)
-  sizep <- nrow(p)
+  sizep <- if(is.null(output <- nrow(p))) length(p) else output
   
   if (sizemu != sizes || sizemu != sizep || sizes != sizep)
     stop("Arguments 'mu', 's' and 'p' must have the same length")
   if (n < 0)
     stop("Argument 'n' must be greather than 0")
   
-  if (any(p < 0 | p > 1) || any(rowSums(p) != 1)) {
-    stop (simpleError("Argument 'p' must have values between 0 and 1 and each row must sum 1."))
-  }
-  
+  if(!is.null(nrow(p)))
+      if (any(p < 0 | p > 1) || any(rowSums(p) != 1)) {
+        stop (simpleError("Argument 'p' must have values between 0 and 1 and each row must sum 1."))
+      }
   obj <- list(mu=mu, servers=s, prob=p, n=n)
   obj$k <- k <- length(mu)
-  trasp <- t(p)
-  id <- diag(k)
-  id <- id[-nrow(id),]
-  aux <- id - trasp[-nrow(trasp),]
-  A <- aux[,-1]
-  B <- -aux[,1]
+  if (!is.null(numCol <- ncol(p)) && p > 2) {
+     id <- diag(k)
+     trasp <- t(p)
+     id <- id[-nrow(id),]
+     aux <- id - trasp[-nrow(trasp),]
+     A <- aux[,-1]
+     B <- -aux[,1]
+     obj$lambda <- lambda <- c(1, solve(A, B))
+  } else if (length(p) == 2) {
+     obj$lambda <- lambda <- c(1, trasp[2,1]/trasp[2,2])  
+  } else {
+     obj$lambda <- lambda <- c(1)
+  }
   
-  obj$lambda <- lambda <- c(1, solve(A, B))
   rho <- lambda/mu
   obj$out$rho <- rho
-  
   nodes <- matrix(c(1), nrow=k, ncol=4, dimnames=list(c(1:k), c("L", "Lq", "W","Wq")))
+
   shiftdown <- c(k, 1:(k-1))
   obj$out$gkn <- NULL
   for (node in k:1) { 
@@ -265,7 +284,6 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0
           barlambda <- barlambda + obj$mu[k]*obj$servers[k]*pnlast(obj, i)
         }
       }
-      
       c <- barlambda/obj$lambda[k]
     } else {
       barlambda <- c*obj$lambda[node]
@@ -276,10 +294,12 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=array(c(0.25,0
     nodes[node,] <- c(l, lq, w, wq)
     
     #Desplazamos mu, rho, s Y P
-    obj$mu <- obj$mu[shiftdown]
-    obj$out$rho <- obj$out$rho[shiftdown]
-    obj$servers <- obj$servers[shiftdown]
-    obj$prob <- obj$prob[shiftdown, shiftdown]
+    if (obj$k > 1) {
+      obj$mu <- obj$mu[shiftdown]
+      obj$out$rho <- obj$out$rho[shiftdown]
+      obj$servers <- obj$servers[shiftdown]
+      obj$prob <- obj$prob[shiftdown, shiftdown]
+    }
   }
   #obj$out$nodes <- nodes
   obj$out$l <- as.numeric(nodes[,"L"])
@@ -326,12 +346,24 @@ Pi.ClosedJackson <- function(net, n, node) {
   return(c((f_close(net, net$k, n[n<=net$n]) * g[net$k-1, net$n-n[n<=net$n]+1])/g[net$k, net$n+1], rep(0, length(n[n>net$n]))))      
 }
 
+#' Print the main characteristics of a Open Jackson Network model
+#' @param x a OpenJackson object
+#' @param ... Further arguments passed to or from other methods.
+#' @method print OpenJackson
+#' @keywords internal
+#' @export
 print.OpenJackson <- function(x, ...) {
   cat("Model: ", class(x)[1], "\n")
   aux <- matrix(c(x$out$l, x$out$lt, x$out$lq, x$out$lqt, x$out$w, x$out$wt, x$out$wq, x$out$wqt), ncol=4, dimnames=list(c(as.character(1:length(x$s)), "Total"), c("L", "Lq", "W", "Wq")))
   print(aux)
 }
 
+#' Print the main characteristics of a Closed Jackson Network model
+#' @param x a ClosedJackson object
+#' @param ... Further arguments passed to or from other methods.
+#' @method print ClosedJackson
+#' @keywords internal
+#' @export
 print.ClosedJackson <- function(x, ...) {
   cat("Model: ", class(x)[1], "\n")
   aux <- matrix(c(x$out$l, x$out$lq, x$out$w, x$out$wq), ncol=4, dimnames=list(as.character(1:x$k), c("L", "Lq", "W", "Wq")))

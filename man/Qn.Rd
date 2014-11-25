@@ -48,4 +48,21 @@ arrival of a customer.
 
 \code{Qn.M_M_S_K} implements the method for a M/M/S/K queueing model
 }
+\examples{
+qm <- M_M_1_INF_H(20, 60, 10)
+#Probability of 0,1,2,3,4 and 5 customers in the queue
+Qn(qm, 0:5)
+qm <- M_M_S_INF_H(10, 40, 5, 8)
+#Probability of 0,1,2,3,4 and 5 customers in the queue
+Qn(qm, 0:5)
+qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#Probability of 0,1,2,3,4 and 5 customers in the queue
+Qn(qm, 0:5)
+qm <- M_M_1_K(60, 10, 3)
+#Probability of 0,1,2,3,4 and 5 customers in the queue
+Qn(qm, 0:5)
+qm <- M_M_S_K(60, 10, 2, 5)
+#Probability of 0,1,2,3,4 and 5 customers in the system
+Qn(qm, 0:5)
+}
 

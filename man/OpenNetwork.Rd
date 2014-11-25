@@ -9,9 +9,11 @@ OpenNetwork(arrivalDistribution = c(Exp(20), Exp(30)),
   transitions = 1000, historic = FALSE, nsim = 10, nproc = 1)
 }
 \arguments{
-\item{arrivalDistribution}{PairList indicating the arrival distribution and the node that uses it.}
+\item{arrivalDistribution}{Vector of arrival distribution in each node (Each element must be an object of S4-class \code{distr}
+defined in \pkg{distr} package or the no_distr object)}
 
-\item{serviceDistribution}{Vector of service distribution in each node}
+\item{serviceDistribution}{Vector of service distribution in each node (Each element must be an object of S4-class \code{distr}
+defined in \pkg{distr} package)}
 
 \item{s}{Vector of servers in each node}
 
@@ -41,6 +43,15 @@ Returns the next information of an Open network model:
 }
 \description{
 Obtains the main characteristics of an Open Network model by simulation
+}
+\examples{
+OpenNetwork(arrivalDistribution = c(Exp(20), no_distr()),
+            serviceDistribution = c(Exp(100), Exp(25)),
+            s                   = c(1,2),
+            p                   = matrix(c(0.2, 0.25, 0.1, 0), nrow=2, ncol=2),
+            staClients          = 10,
+            transitions         = 100,
+            nsim                = 10)
 }
 \seealso{
 Other SimulatedModels: \code{\link{ClosedNetwork}};

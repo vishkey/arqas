@@ -15,14 +15,17 @@ Returns the next information of a M/M/\eqn{\infty} model:
 \item{rho}{Constant coefficient: \eqn{\lambda/\mu}}
 \item{barrho}{Traffic intensity: \ifelse{latex}{\eqn{\bar{\rho}}}{\out{<i>&#862;&rho;</i>}}}
 \item{p0}{Probability of empty system: \ifelse{latex}{\eqn{P_{0}}}{\out{<i>P<sub>0</sub></i>}}}
-\item{l}{Expected number of customers in the system: \eqn{L}}
-\item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_q} (\eqn{L_q} = 0 in this model)}{\out{<i>L<sub>q</sub> (L<sub>q</sub> = 0 in this model)</i>}}}
-\item{w}{Expected waiting time in the system: \eqn{W}}
-\item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_q} (\eqn{W_q} = 0 in this model)}{\out{<i>W<sub>q</sub> (W<sub>q</sub> = 0 in this model)</i>}}}
+\item{l}{Number of customers in the system: \eqn{L}}
+\item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_q} (\eqn{L_q} = 0 in this model)}{\out{<i>L<sub>q</sub> (L<sub>q</sub> = 0 in this model)</i>}}}
+\item{w}{Waiting time in the system: \eqn{W}}
+\item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_q} (\eqn{W_q} = 0 in this model)}{\out{<i>W<sub>q</sub> (W<sub>q</sub> = 0 in this model)</i>}}}
 \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 }
 \description{
 Obtains the main characteristics of a M/M/\eqn{\infty} queueing model
+}
+\examples{
+M_M_INF(15, 23)
 }
 \seealso{
 Other AnaliticalModels: \code{\link{ClosedJacksonNetwork}};

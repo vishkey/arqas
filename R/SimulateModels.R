@@ -17,6 +17,8 @@ belong <- function(obj, packagename) {
 #' 
 #' @param listsims A list of independent simulations
 #' @return an object with the mean and variance of parameters L, Lq, W, Wq, Rho and Eff.
+#' @examples
+#' combineSimulations(G_G_1(nsim=5))
 #' @export
 combineSimulations <- function(listsims) {
   if (class(listsims)[1] != "list") 
@@ -60,8 +62,10 @@ combineSimulations <- function(listsims) {
 
 #' Obtains the main characteristics of a G/G/1 model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
 #' @param historic Parameter used to activate/deactivate the historic information
@@ -69,23 +73,28 @@ combineSimulations <- function(listsims) {
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/1 model:
-#' \item{pn}{Stores all the positives steady-state probabilities of having n customers, with n from 0 to staClients+nClients: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Stores all the empirical steady-state probabilities positives of having n customers, with n from 0 to staClients+nClients: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system: \eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{<i>L, L<sub>q</sub>, W, W<sub>q</sub></i>}},\emph{Customers in the system, Rho and Elapsed time} during the simulation}
+#' @examples
+#' G_G_1(Norm(10, 0.5), Unif(5,6), staClients=10, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 
 G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), staClients = 100, nClients = 1000, historic = FALSE, nsim=10, nproc=1) {
+      if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+      if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+      
       G_G_1_secuential <- function(arrivalDistribution, serviceDistribution, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-        if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+        if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+        if (!is.numeric(staClients) | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
 
         tArr <- r(arrivalDistribution) (staClients+nClients)
         tServ <- r(serviceDistribution) (staClients+nClients)
@@ -216,9 +225,10 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
         return(obj)
     }      
     if (nproc > 1) {
-      cl <- makeCluster(nproc)
+      cl <- parallel::makeCluster(nproc)
       registerDoParallel(cl, cores=nproc)
-      parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+      simulations <- NULL
+      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
         belong <- function(obj, packagename) {
           if (length(obj) > 1)
             packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -233,7 +243,7 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
         }
         return(res)
       }
-      stopCluster(cl)
+      parallel::stopCluster(cl)
       return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
     } else {
       res <-list()
@@ -245,8 +255,10 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
 
 #' Obtains the main characteristics of a G/G/s model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param s Number of servers
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
@@ -255,24 +267,29 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/S model:
-#' \item{pn}{vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system: \eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical Traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation}
+#' @examples
+#' G_G_S(Norm(10, 0.5), Unif(5,6), 2, staClients=10, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 
 G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-      G_G_S_secuential <- function(arrivalDistribution, serviceDistribution, s, staClients, nClients, historic) {
+    if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+    if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")  
+    
+    G_G_S_secuential <- function(arrivalDistribution, serviceDistribution, s, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-        if (s <= 0) stop("Argument 's' must be greather than 0.")
-        if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+        if (!is.numeric(s) | s <= 0) stop("Argument 's' must be greather than 0.")
+        if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+        if (!is.numeric(nClients) | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
         
         tArr <- r(arrivalDistribution) (nClients+staClients)
         tServ <- r(serviceDistribution) (nClients+staClients)
@@ -425,9 +442,10 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
         return(obj)
     }
     if (nproc > 1) {
-      cl <- makeCluster(nproc)
+      cl <- parallel::makeCluster(nproc)
       registerDoParallel(cl, cores=nproc)
-      parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+      simulations <- NULL
+      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
         belong <- function(obj, packagename) {
           if (length(obj) > 1)
             packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -442,7 +460,7 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
         }
         return(res)
       }
-      stopCluster(cl)
+      parallel::stopCluster(cl)
       return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
     } else {
       res <-list()
@@ -454,8 +472,10 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
 
 #'Obtains the main characteristics of a G/G/1/K model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param K Maximun size of the queue
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
@@ -464,24 +484,29 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/1/K model:
-#' \item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system: \eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation.}
+#' @examples
+#' G_G_1_K(Norm(10, 0.5), Unif(5,6), 5, staClients=10, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 
 G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
+      if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+      if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+      
       G_G_1_K_secuential <- function(arrivalDistribution, serviceDistribution, K, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-        if (K <= 0) stop("Argument 'K' must be greather than 0.")
-        if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+        if (!is.numeric(K) | K <= 0) stop("Argument 'K' must be greather than 0.")
+        if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+        if (!is.numeric(nClients) | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
         
         tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
         tServ <- r(serviceDistribution) ((nClients+staClients)*2)
@@ -611,9 +636,10 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
         return(obj)
     }
     if (nproc > 1) {
-      cl <- makeCluster(nproc)
+      cl <- parallel::makeCluster(nproc)
       registerDoParallel(cl, cores=nproc)
-      parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+      simulations <- NULL
+      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
         belong <- function(obj, packagename) {
           if (length(obj) > 1)
             packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -628,7 +654,7 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
         }
         return(res)
       }
-      stopCluster(cl)
+      parallel::stopCluster(cl)
       return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
     } else {
       res <-list()
@@ -640,8 +666,10 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
 
 #' Obtains the main characteristics of a G/G/s/K model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param s Number of servers
 #' @param K Maximun size of the queue
 #' @param staClients Number of customers used in the stabilization stage
@@ -651,25 +679,30 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/S/K model:
-#' \item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system: \eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation}
+#' @examples
+#' G_G_S_K(Norm(10, 0.5), Unif(5,6), 2, 5, staClients=10, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 
 G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, K=3, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-      G_G_S_K_secuential <- function(arrivalDistribution, serviceDistribution, s, K, staClients, nClients, historic) {
+    if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+    if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")   
+    
+    G_G_S_K_secuential <- function(arrivalDistribution, serviceDistribution, s, K, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-        if (s <= 0) stop("Argument 's' must be greather than 0.")
-        if (K <= 0) stop("Argument 'K' must be greather than 0.")
-        if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+        if (!is.numeric(s) | s <= 0) stop("Argument 's' must be greather than 0.")
+        if (!is.numeric(K) | K <= 0) stop("Argument 'K' must be greather than 0.")
+        if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+        if (!is.numeric(nClients)   | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
         
         tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
         tServ <- r(serviceDistribution) ((nClients+staClients)*2)
@@ -814,9 +847,10 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
         return(obj)
     }
     if (nproc > 1) {
-      cl <- makeCluster(nproc)
+      cl <- parallel::makeCluster(nproc)
       registerDoParallel(cl, cores=nproc)
-      parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+      simulations <- NULL
+      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
         belong <- function(obj, packagename) {
           if (length(obj) > 1)
             packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -831,7 +865,7 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
         }
         return(res)
       }
-      stopCluster(cl)
+      parallel::stopCluster(cl)
       return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
     } else {
       res <-list()
@@ -844,8 +878,10 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
 
 #' Obtains the main characteristics of a G/G/1/\eqn{\infty}/H model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param H Population size
 #' @param staClients Number of customers used in the stabilization stage
 #' @param nClients Number of customers used in the simulation stage
@@ -854,24 +890,29 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/1/\eqn{\infty}/H model:
-#' \item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system: \eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation}
+#' @examples
+#' G_G_1_INF_H(Norm(10, 0.5), Unif(5,6), 10, staClients=10, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 
 G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), H=5, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
+  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+  
   G_G_1_INF_H_secuential <- function(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic) {
     if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
     if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-    if (H <= 0) stop("Argument 'H' must be greather than 0.")
-    if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-    if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+    if (!is.numeric(H) | H <= 0) stop("Argument 'H' must be greather than 0.")
+    if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+    if (!is.numeric(nClients)   | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
     
     tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
     tServ <- r(serviceDistribution) ((nClients+staClients)*2)
@@ -997,9 +1038,10 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
     return(obj)
   }
   if (nproc > 1) {
-    cl <- makeCluster(nproc)
+    cl <- parallel::makeCluster(nproc)
     registerDoParallel(cl, cores=nproc)
-    parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+    simulations <- NULL
+    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
       belong <- function(obj, packagename) {
         if (length(obj) > 1)
           packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -1014,7 +1056,7 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
       }
       return(res)
     }
-    stopCluster(cl)
+    parallel::stopCluster(cl)
     return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
   } else {
     res <-list()
@@ -1026,8 +1068,10 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H  model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param s Number of servers
 #' @param H Population size
 #' @param staClients Number of customers used in the stabilization stage
@@ -1037,25 +1081,30 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/S/\eqn{\infty}/H model
-#' \item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system:\eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system:\eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation}
+#' @examples
+#' G_G_S_INF_H(Norm(10, 0.5), Unif(5,6), 3, 10, staClients=10, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 
 G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=3, H=5, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-      G_G_S_INF_H_secuential <- function(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic) {
+    if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+    if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")   
+    
+    G_G_S_INF_H_secuential <- function(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic) {
           if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
           if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-          if (s <= 0) stop("Argument 's' must be greather than 0.")
-          if (H <= 0) stop("Argument 'H' must be greather than 0.")
-          if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-          if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+          if (!is.numeric(s) | s <= 0) stop("Argument 's' must be greather than 0.")
+          if (!is.numeric(H) | H <= 0) stop("Argument 'H' must be greather than 0.")
+          if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+          if (!is.numeric(nClients)   | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
       
           tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
           tServ <- r(serviceDistribution) ((nClients+staClients)*2)
@@ -1209,9 +1258,10 @@ G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
           return(obj)
     }
 if (nproc > 1) {
-  cl <- makeCluster(nproc)
+  cl <- parallel::makeCluster(nproc)
   registerDoParallel(cl, cores=nproc)
-  parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+  simulations <- NULL
+  parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
     belong <- function(obj, packagename) {
       if (length(obj) > 1)
         packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -1226,7 +1276,7 @@ if (nproc > 1) {
     }
     return(res)
   }
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   return(ifelse(length(parallelRes) == 1, parallelRes[[1]], parallelRes))
 } else {
   res <-list()
@@ -1238,8 +1288,10 @@ if (nproc > 1) {
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H with Y replacements model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param s Number of servers
 #' @param H Population size
 #' @param Y Number of replacements
@@ -1250,25 +1302,30 @@ if (nproc > 1) {
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/1/S/\eqn{\infty}/H/Y model:
-#' \item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system: \eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation}
+#' @examples
+#' G_G_S_INF_H_Y(Norm(10, 0.5), Unif(5,6), 3, 10, 2, staClients=10, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=3, H=5, Y=3, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
+  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+  
   G_G_S_INF_H_Y_secuential <- function(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution' must be a valid Class of the Distr package")
-        if (s <= 0) stop("Argument 's' must be greather than 0.")
-        if (H <= 0) stop("Argument 'H' must be greather than 0.")
-        if (Y <= 0) stop("Argument 'Y' must be greather than 0.")
-        if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-        if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+        if (!is.numeric(s) | s <= 0) stop("Argument 's' must be greather than 0.")
+        if (!is.numeric(H) | H <= 0) stop("Argument 'H' must be greather than 0.")
+        if (!is.numeric(Y) | Y <= 0) stop("Argument 'Y' must be greather than 0.")
+        if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+        if (!is.numeric(nClients)   | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
         
         tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
         tServ <- r(serviceDistribution) ((nClients+staClients)*2)
@@ -1442,9 +1499,10 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
         return(obj)
   }
   if (nproc > 1) {
-    cl <- makeCluster(nproc)
+    cl <- parallel::makeCluster(nproc)
     registerDoParallel(cl, cores=nproc)
-    parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+    simulations <- NULL
+    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
       belong <- function(obj, packagename) {
         if (length(obj) > 1)
           packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -1459,7 +1517,7 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
       }
       return(res)
     }
-    stopCluster(cl)
+    parallel::stopCluster(cl)
     return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
   } else {
     res <-list()
@@ -1471,8 +1529,10 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
 
 #' Obtains the main characteristics of a G/G/\eqn{\infty} model by simulation
 #' 
-#' @param arrivalDistribution Arrival distribution
-#' @param serviceDistribution Service distribution
+#' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
+#' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param staClients Number of customers used in stabilization stage
 #' @param nClients Number of customers used in the simulation stage
 #' @param historic Parameter to activate/deactivate the historic information
@@ -1480,22 +1540,27 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/\eqn{\infty} model:
-#' \item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Expected number of customers in the system: \eqn{L}}
-#' \item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{w}{Expected waiting time in the system: \eqn{W}}
-#' \item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Empirical number of customers in the system: \eqn{L}}
+#' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{w}{Empirical waiting time in the system: \eqn{W}}
+#' \item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation}
+#' @examples
+#' G_G_INF(Norm(10, 0.5), Unif(2,4), staClients=50, nClients=100, nsim=10)
 #' @export
 #' @family SimulatedModels
 G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
+  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+  
   G_G_INF_secuential <- function(arrivalDistribution, serviceDistribution, staClients, nClients, historic) {
       if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
       if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
-      if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-      if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+      if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+      if (!is.numeric(nClients) | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
       
       tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
       tServ <- r(serviceDistribution) ((nClients+staClients)*2)
@@ -1615,9 +1680,10 @@ G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staC
       return(obj)
   }
   if (nproc > 1) {
-    cl <- makeCluster(nproc)
+    cl <- parallel::makeCluster(nproc)
     registerDoParallel(cl, cores=nproc)
-    parallelRes <- foreach(simulations=idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+    simulations <- NULL
+    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
       belong <- function(obj, packagename) {
         if (length(obj) > 1)
           packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -1632,7 +1698,7 @@ G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staC
       }
       return(res)
     }
-    stopCluster(cl)
+    parallel::stopCluster(cl)
     return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
   } else {
     res <-list()
@@ -1652,7 +1718,8 @@ SCN_example <- function (sta, trans) {
 
 #' Obtains the main characteristics of a Closed Network model by simulation
 #' 
-#' @param serviceDistribution Service distributions for the nodes of the network
+#' @param serviceDistribution Service distributions for the nodes of the network (Each element must be an object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param s Vector of servers at each node
 #' @param p Routing matrix, where \ifelse{latex}{\eqn{p_{ij}}}{\out{<i>p<sub>ij</sub></i>}} is the routing probability from node i to node j
 #' @param staClients Number of customers used in the stabilization stage
@@ -1663,25 +1730,37 @@ SCN_example <- function (sta, trans) {
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a Closed Network model:
-#' \item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_n}}{\out{<i>P<sub>n</sub></i>}}}
-#' \item{l}{Vector of expected number of customers in the nodes: \eqn{L}}
-#' \item{lq}{Vector of expected number of customers in the queues of the nodes: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{lqt}{Expected number of customers in the all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L_<sub>qTotal</sub></i>}}}
-#' \item{w}{Vector of expected waiting times in the nodes: \eqn{W}}
-#' \item{wq}{Vector of expected waiting times in the queues of the nodes: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-#' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-#' \item{rho}{Traffic intensity: \eqn{\rho}}
+#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_n}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{l}{Vector of empirical number of customers in the nodes: \eqn{L}}
+#' \item{lq}{Vector of empirical number of customers in the queues of the nodes: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+#' \item{lqt}{Empirical number of customers in the all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L_<sub>qTotal</sub></i>}}}
+#' \item{w}{Vector of empirical waiting times in the nodes: \eqn{W}}
+#' \item{wq}{Vector of empirical waiting times in the queues of the nodes: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+#' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+#' \item{rho}{Empirical traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation.}
+#' @examples
+#' ClosedNetwork(serviceDistribution = c(Exp(5), Exp(5), Exp(10), Exp(15)),
+#'               s                   = c(2,2,1,1),
+#'               p                   = array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)),
+#'               nClient             = 3,
+#'               staClients          = 10,
+#'               transitions         = 100,
+#'               nsim                = 10)
 #' @export
 #' @family SimulatedModels
 
 ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)), s=c(2,2,1,1), p=array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)), staClients=100, nClients=3, transitions=1000, historic=FALSE, nsim=10, nproc=1) {
+  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+  
   ClosedNetwork_secuential <- function(serviceDistribution, s, p, staClients, nClients, transitions, historic) {
       if (!belong(serviceDistribution, "distr")) stop("All elements in argument 'serviceDistribution' must be a valid Class of the Distr package")
-      if (any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
-      if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-      if (nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
-      if (transitions < 0) stop("Argument 'transitions' must be equal or greather than 0.")
+      if (!is.numeric(p))  stop("All elements in argument 'p' must be numerical.")
+      if (!is.numeric(s) | any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
+      if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+      if (!is.numeric(nClients) | nClients <= 0) stop("Argument 'nClients' must be greather than 0.")
+      if (!is.numeric(transitions) | transitions < 0) stop("Argument 'transitions' must be equal or greather than 0.")
       
       nodesServ <- length(serviceDistribution)
       nodesS <- length(s)
@@ -1857,9 +1936,10 @@ ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)
       return(obj)
   }
   if (nproc > 1) {
-    cluster <- makeCluster(nproc)
+    cluster <- parallel::makeCluster(nproc)
     registerDoParallel(cluster, cores=nproc)
-    parallelRes <- foreach(simulations=idiv(nsim, chunks = nproc), .combine=c, .multicombine=TRUE, .packages="distr") %dopar% {
+    simulations <- NULL
+    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks = nproc), .combine=c, .multicombine=TRUE, .packages="distr") %dopar% {
       belong <- function(obj, packagename) {
         if (length(obj) > 1)
           packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -1874,7 +1954,7 @@ ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)
       }
       return(res)
     }
-    stopCluster(cluster)
+    parallel::stopCluster(cluster)
     return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
   }
   res <-list()
@@ -1894,8 +1974,10 @@ SON_Example <- function (sta, trans) {
 
 #' Obtains the main characteristics of an Open Network model by simulation
 #'  
-#' @param arrivalDistribution PairList indicating the arrival distribution and the node that uses it.
-#' @param serviceDistribution Vector of service distribution in each node
+#' @param arrivalDistribution Vector of arrival distribution in each node (Each element must be an object of S4-class \code{distr} 
+#' defined in \pkg{distr} package or the no_distr object)
+#' @param serviceDistribution Vector of service distribution in each node (Each element must be an object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)
 #' @param s Vector of servers in each node
 #' @param p Routing matrix, where \eqn{p_{ij}} is the routing probability from node i to node j
 #' @param staClients Number of customers used in the stabilization stage
@@ -1914,31 +1996,44 @@ SON_Example <- function (sta, trans) {
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 #' \item{rho}{Traffic intensity: \eqn{\rho}}
 #' \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation.}
+#' @examples
+#' OpenNetwork(arrivalDistribution = c(Exp(20), no_distr()), 
+#'             serviceDistribution = c(Exp(100), Exp(25)),
+#'             s                   = c(1,2),
+#'             p                   = matrix(c(0.2, 0.25, 0.1, 0), nrow=2, ncol=2),
+#'             staClients          = 10,
+#'             transitions         = 100,
+#'             nsim                = 10)
 #' @export
 #' @family SimulatedModels
 
          
 OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribution=c(Exp(100), Exp(25)), s=c(1, 2), p=matrix(c(0.2, 0.25, 0.1, 0), nrow=2, ncol=2), staClients=100, transitions=1000, historic=FALSE, nsim=10, nproc=1) {
+  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+
   OpenNetwork_secuential <- function(arrivalDistribution, serviceDistribution, s, p, staClients, transitions, historic) {
       nodesArrival <- length(arrivalDistribution)
       nodesService <- length(serviceDistribution)
       nodesS <- length(s)
       nodesP <- nrow(p)
-      
-      obj <- list(arrivalDistribution=arrivalDistribution, serviceDistribution=serviceDistribution, s= s, prob=p, staclients=staClients, transitions=transitions)
+
       if (nodesArrival != nodesService || nodesArrival != nodesS || nodesArrival != nodesP || nodesService != nodesS || nodesService != nodesP || nodesS != nodesP)
         stop("The arguments 'arrivalDistribution', 'serviceDistribution', 's' and 'p' must have the same dimensions.")
-    
+      obj <- list(arrivalDistribution=arrivalDistribution, serviceDistribution=serviceDistribution, s= s, prob=p, staclients=staClients, transitions=transitions)
+      
       nodeswitharrivals <- sapply(arrivalDistribution, class) != "no_distr"
       if (!any(nodeswitharrivals)) stop("At least one node must have an Arrival Distribution.")
       arrivalDistribution <- pairlist(arrivalDistribution[nodeswitharrivals], which(nodeswitharrivals))
        
       if (!belong(serviceDistribution, "distr")) stop("All elements in argument 'serviceDistribution' must be a valid Class of the Distr package")
       if (!belong(arrivalDistribution[[1]], "distr")) stop("All elements in argument 'ArrivalDistribution' must be a valid Class of the Distr package")
-      if (any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
-      if (staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
-      if (transitions < 0) stop("Argument 'transitions' must be equal or greather than 0.")
+      if (!is.numeric(s) | any(s <= 0)) stop("All elements in argument 's' must be greather than 0.")
+      if (!is.numeric(staClients) | staClients < 0) stop("Argument 'staClients' must be equal or greather than 0.")
+      if (!is.numeric(transitions) | transitions < 0) stop("Argument 'transitions' must be equal or greather than 0.")
+      if (!is.numeric(p))  stop("All elements in argument 'p' must be numerical.")
       
+     
       nodes <- length(s)
       maxserv <- max(s)
       #Adaptamos la matriz de probabilidades para tener encuenta las salidas
@@ -2191,8 +2286,6 @@ OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribu
       nozero <- apply(prob, 1, function(v){any(v>0)})
       pn <- prob[1:max(which(nozero)),]/cron
       obj$out <- list(l=l, lq=lq, lqt=lqt, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
-      #obj$out$data <- array(c(l, lq, w, wq), dim= c(nodes, 4), dimnames=list(1:nodes, c("L", "Lq", "W", "Wq")))
-      #obj$out$Lqt <- sum(obj$out$data[,1])
       if (historic) {
         obj$out$historic <- hist
       }
@@ -2201,9 +2294,10 @@ OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribu
       return(obj)
   }
   if (nproc > 1) {
-    cluster <- makeCluster(nproc)
+    cluster <- parallel::makeCluster(nproc)
     registerDoParallel(cluster, cores=nproc)
-    parallelRes <- foreach(transitions=idiv(nsim, chunks = nproc), .combine=c, .multicombine=TRUE, .packages="distr") %dopar% {
+    simulations <- NULL
+    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks = nproc), .combine=c, .multicombine=TRUE, .packages="distr") %dopar% {
       belong <- function(obj, packagename) {
         if (length(obj) > 1)
           packageobj <- sapply(lapply(obj, class), attr, "package")
@@ -2218,7 +2312,7 @@ OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribu
       }
       return(res);
     }
-    stopCluster(cluster)
+    parallel::stopCluster(cluster)
     return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
   }
   res <-list()
@@ -2275,33 +2369,17 @@ print.SimulatedNetwork <- function(x, ...) {
   print(data.frame("L"=x$out$l, "Lq"=x$out$lq, "W"=x$out$w, "Wq"=x$out$wq))
 }
 
-# summary.SimulatedModel <- function(object, range=NULL, ...) {
-#   if (is.null(object$out$historic)) stop("Argument 'historic' should be TRUE to show the plots")
-#   if (is.null(range))  {
-#     maxrange <- length(object$out$historic[,"L"])
-#     minrange <- 1
-#   }
-#   else {
-#     maxrange <- max(range)
-#     minrange <- min(range)
-#   }
-#   par(mfrow=c(3,2))
-#   barplot(object$out$historic[minrange:maxrange,"Clients"])
-#   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"Intensity"], type="l")
-#   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"L"], type="l")
-#   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"Lq"], type="l")
-#   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"W"], type="l")
-#   plot(minrange:maxrange, object$out$historic[minrange:maxrange,"Wq"], type="l")
-# }
 
 #' Shows a plot of the evolution of a variable during the simulation
 #' 
 #' @param object Simulated Model
-#' @param minrange First client choosen in the simulation
-#' @param maxrange Last client choosen in the simulation
-#' @param var Variable to show graphic (L, Lq, W, Wq)
+#' @param minrange Number of customer to establish the start of the plot
+#' @param maxrange Number of customer to establish the end of the plot
+#' @param var Variable to show graphic (L, Lq, W, Wq, Clients, Intensity)
 #' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
-#' @param depth Number of point printed in the plot
+#' @param depth Number of points printed in the plot
+#' @param nSimulation Selects one simulation for the list to show when var is "Clients"
+#' @param ... Further arguments passed to or from other methods.
 #' @export
 summarySimple <- function(object, minrange, maxrange, var, graphics, ...) {UseMethod("summarySimple", object)}
 
@@ -2331,7 +2409,7 @@ summarySimple.SimulatedModel <- function(object, minrange, maxrange, var, graphi
 #' @details
 #' \code{summarySimple.SimulatedNetwork} implements the function for an object of class SimulatedNetwork.
 #' @export
-summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange) {
+summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange, ...) {
   if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
   if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
   switch(graphics,
@@ -2344,9 +2422,6 @@ summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, grap
                       cumPlot <- qplot(x=ifelse(is.na(aux<-object$out$historic[1, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[1, var, truerange]), 0, aux), geom="line", colour="red")
                       for(node in 2:(dim(object$out$historic)[1])) {
                         cumPlot <- cumPlot + geom_line(aes(x=ifelse(is.na(aux<-object$out$historic[node, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[node, var, truerange]), 0, aux)), colour=colours(distinct=TRUE)[node*2+1]) + theme(element_rect(colour = node*2+1))
-                        #data <- melt(data[node,,], id.vars=c("t"))
-                        #eval(parse(text=paste("qplot(t, value, data=data, geom='line', colour=node, 
-                        #main='Evolution of ", var, ".', ylab='", var , "') + geom_vline(xintercept=object$out$historic[1, 'tClient', object$Staclients], linetype='dotdash') + theme(legend.position='none')", sep="")))
                       } 
                       cumPlot
                      }
@@ -2358,7 +2433,7 @@ summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, grap
 #' @details
 #' \code{summarySimple.list} implements the function for an object of class list
 #' @export
-summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange+1, nSimulation=1) {
+summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange+1, nSimulation=1, ...) {
       if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
       if (!is.numeric(nSimulation)) nSimulation <- 1
       firstHistoric <- object[[1]]$out$historic
@@ -2371,7 +2446,8 @@ summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot
       lapply(object, function(qm){
           historic <- getElement(getElement(qm, "out"), "historic")
           dimensions <<- dim(historic)
-          truerange <- seq(minrange, maxrange, lenght.out=depth)
+          truerange <- seq(minrange, maxrange, length.out=depth)
+          print(truerange)
           if (is.null(historic)) stop(simpleError("The argument 'historic' must be TRUE to show the plot."))
           if (length(dim(historic)) == 2)
             plotdata <<- rbind(plotdata, data.frame(x=truerange, val=historic[truerange, var], sim=rep(index, length(truerange))))
@@ -2382,6 +2458,7 @@ summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot
           }
           index <<- index+1
       })
+      sim <- x <- val <- NULL
       if (length(dimensions) == 2) 
           if (var == "Clients")
             ggplot(subset(plotdata, sim == nSimulation), aes(x=x, y=val, order=factor(sim))) + geom_histogram(stat="identity", na.rm=TRUE) + ggtitle(paste("Evolution of ", var, " in simulation ", nSimulation, sep="")) + theme(legend.position="none")

@@ -50,7 +50,7 @@ for a queueing model
 
 \code{FW.M_M_S_INF_H} implements the method for a M/M/s/\eqn{\infty}/H queueing model
 
-\code{FW.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H/ with Y replacements queueing model
+\code{FW.M_M_S_INF_H_Y} implements the method for a M/M/s/\eqn{\infty}/H with Y replacements queueing model
 
 \code{FW.M_M_INF} implements the method for a M/M/\eqn{\infty} queueing model
 
@@ -63,5 +63,31 @@ for a queueing model
 \code{FW.M_M_1_K} implements the method for a M/M/1/K queueing model
 
 \code{FW.M_M_S_K} implements the method for a M/M/S/K queueing model
+}
+\examples{
+qm <- M_M_1_INF_H(20, 60, 10)
+#Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the system
+FW(qm, c(0, 0.25, 0.5))
+qm <- M_M_S_INF_H(10, 40, 5, 8)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+FW(qm, c(0, 0.25, 0.5))
+qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+FW(qm, c(0, 0.25, 0.5))
+qm <- M_M_INF(15, 23)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+FW(qm, c(0, 0.25, 0.5))
+qm <- M_M_1(60, 80)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+FW(qm, c(0, 0.25, 0.5))
+qm <- M_M_S(60, 20, 4)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+FW(qm, c(0, 0.25, 0.5))
+qm <- M_M_1_K(60, 10, 3)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+FW(qm, c(0, 0.25, 0.5))
+qm <- M_M_S_K(60, 10, 2, 5)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+FW(qm, c(0, 0.25, 0.5))
 }
 

@@ -6,29 +6,34 @@
 \alias{summarySimple.list}
 \title{Shows a plot of the evolution of a variable during the simulation}
 \usage{
-summarySimple(object, minrange, maxrange, var, graphics, depth)
+summarySimple(object, minrange, maxrange, var, graphics, ...)
 
 \method{summarySimple}{SimulatedModel}(object, minrange, maxrange, var,
-  graphics = "ggplot2", depth = maxrange - minrange)
+  graphics = "ggplot2", depth = maxrange - minrange, ...)
 
 \method{summarySimple}{SimulatedNetwork}(object, minrange, maxrange, var,
-  graphics = "ggplot2", depth = maxrange - minrange)
+  graphics = "ggplot2", depth = maxrange - minrange, ...)
 
 \method{summarySimple}{list}(object, minrange, maxrange, var,
-  graphics = "ggplot2", depth = 100)
+  graphics = "ggplot2", depth = maxrange - minrange + 1, nSimulation = 1,
+  ...)
 }
 \arguments{
 \item{object}{Simulated Model}
 
-\item{minrange}{First client choosen in the simulation}
+\item{minrange}{Number of customer to establish the start of the plot}
 
-\item{maxrange}{Last client choosen in the simulation}
+\item{maxrange}{Number of customer to establish the end of the plot}
 
-\item{var}{Variable to show graphic (L, Lq, W, Wq)}
+\item{var}{Variable to show graphic (L, Lq, W, Wq, Clients, Intensity)}
 
 \item{graphics}{Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2}
 
-\item{depth}{Number of point printed in the plot}
+\item{...}{Further arguments passed to or from other methods.}
+
+\item{depth}{Number of points printed in the plot}
+
+\item{nSimulation}{Selects one simulation for the list to show when var is "Clients"}
 }
 \description{
 Shows a plot of the evolution of a variable during the simulation

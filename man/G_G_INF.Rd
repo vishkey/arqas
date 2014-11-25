@@ -8,9 +8,11 @@ G_G_INF(arrivalDistribution = Exp(3), serviceDistribution = Exp(6),
   nproc = 1)
 }
 \arguments{
-\item{arrivalDistribution}{Arrival distribution}
+\item{arrivalDistribution}{Arrival distribution (object of S4-class \code{distr}
+defined in \pkg{distr} package)}
 
-\item{serviceDistribution}{Service distribution}
+\item{serviceDistribution}{Service distribution (object of S4-class \code{distr}
+defined in \pkg{distr} package)}
 
 \item{staClients}{Number of customers used in stabilization stage}
 
@@ -24,17 +26,20 @@ G_G_INF(arrivalDistribution = Exp(3), serviceDistribution = Exp(6),
 }
 \value{
 Returns the next information of a G/G/\eqn{\infty} model:
-\item{pn}{Vector of steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
-\item{l}{Expected number of customers in the system: \eqn{L}}
-\item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-\item{w}{Expected waiting time in the system: \eqn{W}}
-\item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-\item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
-\item{rho}{Traffic intensity: \eqn{\rho}}
+\item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+\item{l}{Empirical number of customers in the system: \eqn{L}}
+\item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+\item{w}{Empirical waiting time in the system: \eqn{W}}
+\item{wq}{Empirical waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+\item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
+\item{rho}{Empirical traffic intensity: \eqn{\rho}}
 \item{historic}{Optional parameter that stores the evolution of \ifelse{latex}{\eqn{L}, \eqn{L_q}, \eqn{W} and  \eqn{W_q}}{\out{L, L<sub>q</sub>, W, W<sub>q</sub>}}\emph{, Customers in the system, Rho and Elapsed time} during the simulation}
 }
 \description{
 Obtains the main characteristics of a G/G/\eqn{\infty} model by simulation
+}
+\examples{
+G_G_INF(Norm(10, 0.5), Unif(2,4), staClients=50, nClients=100, nsim=10)
 }
 \seealso{
 Other SimulatedModels: \code{\link{ClosedNetwork}};

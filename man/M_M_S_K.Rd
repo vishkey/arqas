@@ -22,14 +22,17 @@ Returns the next information of a M/M/S/K model:
 \item{cn}{Coefficients used in the computation of \ifelse{latex}{\eqn{P_n}: \eqn{C_n}}{\out{<i>P<sub>n</sub></i>: <i>C<sub>n</sub></i>}}}
 \item{pks}{Probability of \eqn{K+s} customers in the system: \ifelse{latex}{\eqn{P_{K+s}}}{\out{<i>P<sub>K+s</sub></i>}}}
 \item{p0}{Probability of empty system: \ifelse{latex}{\eqn{P_{0}}}{\out{<i>P<sub>0</sub></i>}}}
-\item{l}{Expected number of customers in the system: \eqn{L}}
-\item{lq}{Expected number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-\item{w}{Expected waiting time in the system: \eqn{W}}
-\item{wq}{Expected waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+\item{l}{Number of customers in the system: \eqn{L}}
+\item{lq}{Number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+\item{w}{Waiting time in the system: \eqn{W}}
+\item{wq}{Waiting time in the queue: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
 \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 }
 \description{
 Obtains the main characteristics of a M/M/S/k queueing model
+}
+\examples{
+M_M_S_K(60, 10, 2, 5)
 }
 \seealso{
 Other AnaliticalModels: \code{\link{ClosedJacksonNetwork}};

@@ -14,4 +14,7 @@ an object with the mean and variance of parameters L, Lq, W, Wq, Rho and Eff.
 \description{
 Combines a list of independent simulations of a queueing model, calculating the mean and variance of each characteristic of interest
 }
+\examples{
+combineSimulations(G_G_1(nsim=5))
+}
 

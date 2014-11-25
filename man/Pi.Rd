@@ -19,7 +19,7 @@ Pi(net, n, node)
 \item{node}{Node}
 }
 \value{
-\ifelse{latex}{P_n}{\out{<i>P<sub>n</sub></i>}} in the selected node
+\ifelse{latex}{P_{n}}{\out{<i>P<sub>n</sub></i>}} in the selected node
 }
 \description{
 Returns the value \ifelse{latex}{\eqn{P_{i}(n)}}{\out{<i>P<sub>i</sub>(n)</i>}} in the node i of a network

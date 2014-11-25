@@ -63,4 +63,30 @@ Returns the value of the cumulative distribution function of waiting time in the
 
 \code{FWq.M_M_S_K} implements the method for a M/M/S/K queueing model
 }
+\examples{
+qm <- M_M_1_INF_H(20, 60, 10)
+#Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the queue
+FWq(qm, c(0, 0.25, 0.5))
+qm <- M_M_S_INF_H(10, 40, 5, 8)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+FWq(qm, c(0, 0.25, 0.5))
+qm <- M_M_S_INF_H_Y(3, 6, 2, 5, 8)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+FWq(qm, c(0, 0.25, 0.5))
+qm <- M_M_INF(15, 23)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+FWq(qm, c(0, 0.25, 0.5))
+qm <- M_M_1(60, 80)
+#Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the queue
+FWq(qm, c(0, 0.25, 0.5))
+qm <- M_M_S(60, 20, 4)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the system
+FWq(qm, c(0, 0.25, 0.5))
+qm <- M_M_1_K(60, 10, 3)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+FWq(qm, c(0, 0.25, 0.5))
+qm <- M_M_S_K(60, 10, 2, 5)
+#Cumulative probability of waiting 0, 0.25 and 0.5 units of time in the queue
+FWq(qm, c(0, 0.25, 0.5))
+}
 

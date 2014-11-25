@@ -2,14 +2,17 @@
 #'
 #' Constructor for \code{MarkovianModel} class.
 #'
+#' @import methods distr reshape ggplot2 iterators doParallel foreach fitdistrplus gridExtra
 #' @param arrivalDistribution Arrival distribution (object of S4-class \code{distr} 
 #' defined in \pkg{distr} package)
 #' @param serviceDistribution Service distribution (object of S4-class \code{distr} 
 #' defined in \pkg{distr} package)
 #' @return 
 #' An object of class \code{MarkovianModel}, a list with the following components:
-#' \item{arrivalDistribution}{Arrival distribution}
-#' \item{serviceDistribution}{Service distribution}
+#' \item{arrivalDistribution}{Arrival distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)}
+#' \item{serviceDistribution}{Service distribution (object of S4-class \code{distr} 
+#' defined in \pkg{distr} package)}
 #' @export
 MarkovianModel <- function (arrivalDistribution = Exp(1), serviceDistribution = Exp(1)) {
   packagearr <- attr(class(arrivalDistribution), "package")
@@ -31,6 +34,7 @@ MarkovianModel <- function (arrivalDistribution = Exp(1), serviceDistribution = 
 #' @param qm Queueing model
 #' @param x Time
 #' @return \deqn{W(x)}
+#' @rdname FW
 #' @export
 FW <- function(qm, x) {UseMethod("FW", qm)}
 
@@ -42,6 +46,7 @@ FW <- function(qm, x) {UseMethod("FW", qm)}
 #'  @param qm Queueing model
 #'  @param x Time
 #'  @return \ifelse{latex}{\deqn{W_{q}(x)}}{\out{<i>W<sub>q</sub>(x)</i>}}
+#'  @rdname FWq
 #'  @export
 FWq <- function(qm, x) {UseMethod("FWq", qm)}
 
@@ -52,6 +57,7 @@ FWq <- function(qm, x) {UseMethod("FWq", qm)}
 #' @param qm Queueing model
 #' @param n Customers
 #' @return \ifelse{latex}{\deqn{P_n}}{\out{<i>P<sub>n</sub></i>}}
+#' @rdname Pn
 #' @export
 Pn <- function(qm, n) {UseMethod("Pn", qm)}
 
@@ -63,6 +69,7 @@ Pn <- function(qm, n) {UseMethod("Pn", qm)}
 #' @param qm Queueing model
 #' @param n Customers
 #' @return \ifelse{latex}{\deqn{Q_n}}{\out{<i>Q<sub>n</sub></i>}}
+#' @rdname Qn
 #' @export
 Qn <- function(qm, n) {UseMethod("Qn", qm)}
 
@@ -73,6 +80,7 @@ Qn <- function(qm, n) {UseMethod("Qn", qm)}
 #' @param net Network
 #' @param i Node
 #' @return \ifelse{latex}{\deqn{P_{0,i}}}{\out{<i>P<sub>0,i</sub></i>}}
+#' @rdname P0i
 #' @export
 P0i <- function(net, i) {UseMethod("P0i", net)}
 
@@ -91,6 +99,7 @@ Pi0 <- function(net, i) {UseMethod("Pi0", net)}
 #' @param net Network
 #' @param i Node
 #' @return \code{MarkovianModel} object
+#' @rdname node
 #' @export
 node <- function(net, i) {UseMethod("node", net)}
 
@@ -101,7 +110,8 @@ node <- function(net, i) {UseMethod("node", net)}
 #' @param net Network
 #' @param n Customers
 #' @param node Node
-#' @return \ifelse{latex}{P_n}{\out{<i>P<sub>n</sub></i>}} in the selected node
+#' @return \ifelse{latex}{P_{n}}{\out{<i>P<sub>n</sub></i>}} in the selected node
+#' @rdname Pi
 #' @export
 Pi <- function(net, n, node) {UseMethod("Pi", net)}
 
@@ -169,7 +179,7 @@ summary.MarkovianModel <- function(object, t=list(range=seq(object$out$w, object
   }
 }
 
-#' Shows a plot of W(t) and \ifelse{latex}{W_q(t)}{<i>W<sub>q</sub>(t)<i>} values of a Markovian Model
+#' Shows a plot of W(t) and \ifelse{latex}{W_{q}(t)}{<i>W<sub>q</sub>(t)<i>} values of a Markovian Model
 #' 
 #' @param object Markovian Model
 #' @param t Range of t
@@ -193,6 +203,7 @@ summaryWtWqt <- function(object, t, graphics="ggplot2") {
                   title(main=paste("Distribution functions of waiting times (t from ", data$t[1], " to ", data$t[length(data$t)], ")", sep=""))
            },
            "ggplot2" = {
+                  value <- variable <- NULL
                   data <- melt(data, id.var="t") 
                   qplot(t, value, data=data, geom="line", colour=variable, 
                         main=paste("Distribution functions of waiting times (t from ", data$t[1], " to ", data$t[length(data$t)], ")", sep=""),
@@ -201,7 +212,7 @@ summaryWtWqt <- function(object, t, graphics="ggplot2") {
   })
 }
 
-#' Shows a plot of \ifelse{latex}{P_n and Q_n}{\out{P<sub>n</sub> and Q<sub>n</sub>}} values of a Markovian Model
+#' Shows a plot of \ifelse{latex}{P_{n} and Q_{n}}{\out{P<sub>n</sub> and Q<sub>n</sub>}} values of a Markovian Model
 #' 
 #' @param object Markovian Model
 #' @param n Range of n
@@ -220,6 +231,7 @@ summaryPnQn <- function(object, n, graphics="ggplot2") {
          },
          "ggplot2" = {
              tryCatch({
+               value <- variable <- NULL
                data <- melt(data.frame(n, "Pn"=Pn(object, n), "Qn"=Qn(object, n)), id.var="n")
               qplot(n, value, data=data, geom="bar", stat="identity", fill=variable, position="dodge",
                     main=paste("Probabilities of n customers (n from ", n[1], " to ", n[length(n)], ")", sep=""),
@@ -233,9 +245,10 @@ summaryPnQn <- function(object, n, graphics="ggplot2") {
          })
 }
 
-#' Returns the maximun value for n that satisfies \ifelse{latex}{P_n}{\out{P<sub>n</sub>}} > 0
+#' Returns the maximun value for n that satisfies \ifelse{latex}{P_{n}}{\out{P<sub>n</sub>}} > 0
 #' 
 #' @param qm object MarkovianModel
+#' @rdname maxCustomers
 #' @export
 maxCustomers <- function(qm) {UseMethod("maxCustomers", qm)}
 

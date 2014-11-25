@@ -18,18 +18,21 @@ OpenJacksonNetwork(lambda = c(20, 30), mu = c(100, 25), s = c(1, 2),
 \value{
 Returns the next information of an Open Jackson network model:
 \item{rho}{Traffic intensity: \eqn{\rho}}
-\item{l}{Vector with the expected number of customers in the nodes: \eqn{L}}
-\item{lq}{Vector of expected number of customers in the queue of each node: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-\item{w}{Vector of expected waiting time in each node: \eqn{W}}
-\item{wq}{Vector of expected waiting time in the queue of each node: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
-\item{lt}{Expected number of customers in the network: \ifelse{latex}{\eqn{L_{Total}}}{\out{<i>L<sub>Total</sub></i>}}}
-\item{lqt}{Expected number of customers in all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L<sub>qTotal</sub><i>}}}
-\item{wt}{Total expected waiting time in the network: \ifelse{latex}{\eqn{W_{Total}}}{\out{<i>W<sub>Total</sub></i>}}}
-\item{wqt}{Total expected waiting time in all queues: \ifelse{latex}{\eqn{W_{qTotal}}}{\out{<i>W<sub>qTotal</sub></i>}}}
+\item{l}{Vector with the number of customers in the nodes: \eqn{L}}
+\item{lq}{Vector with the number of customers in the queue of each node: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
+\item{w}{Vector with the waiting time in each node: \eqn{W}}
+\item{wq}{Vector with the waiting time in the queue of each node: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
+\item{lt}{Number of customers in the network: \ifelse{latex}{\eqn{L_{Total}}}{\out{<i>L<sub>Total</sub></i>}}}
+\item{lqt}{Number of customers in all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L<sub>qTotal</sub><i>}}}
+\item{wt}{Total waiting time in the network: \ifelse{latex}{\eqn{W_{Total}}}{\out{<i>W<sub>Total</sub></i>}}}
+\item{wqt}{Total waiting time in all queues: \ifelse{latex}{\eqn{W_{qTotal}}}{\out{<i>W<sub>qTotal</sub></i>}}}
 \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 }
 \description{
 Obtains the main characteristics of an Open Jackson network model
+}
+\examples{
+OpenJacksonNetwork()
 }
 \seealso{
 Other AnaliticalModels: \code{\link{ClosedJacksonNetwork}};

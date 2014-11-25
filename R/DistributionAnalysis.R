@@ -23,7 +23,7 @@ fitData <- function (data, ldistr= c("exp", "norm", "weibull", "unif", "lnorm", 
 #' Computes the p-value of the chi-square test and Kolmogorov-Smirnov test and each statistic value
 #' 
 #' @param lfitdata a list of fitted data
-#' @return the p-values of the chi-square test and Kolmogorov-Smirnov test
+#' @return the p-values and the statistics values of the chi-square test and Kolmogorov-Smirnov test
 #' @export
 #' @family DistributionAnalysis
 goodnessFit <- function(lfitdata) {
@@ -96,6 +96,7 @@ denscompggplot2 <- function(lfitdata){
    for(fit in lfitdata) {
       eldata <- do.call(paste("d", fit$distname, sep=""), c(list(x), as.list(fit$estimate)))
       aux2 <- data.frame(data=x, Density=eldata, Distributions=fit$distname)
+      Density <- Distributions <- NULL
       resplot <- resplot + geom_line(data=aux2, size=0.25, aes(x=data, y=Density, colour=Distributions))
    }
   resplot
@@ -125,6 +126,7 @@ cdfcompggplot2 <- function(lfitdata){
     eldata <- do.call(paste("r", fit$distname, sep=""), c(list(x), as.list(fit$estimate)))
     eldata <- sort(eldata)
     aux2 <- data.frame(data=eldata, Density=cumulative, Distributions=fit$distname)
+    Density <- Distributions <- NULL
     resplot <- resplot + geom_line(data=aux2, size=0.25, aes(x=data, y=Density, colour=Distributions))
   }
   resplot
@@ -152,6 +154,7 @@ qqcompggplot2 <- function(lfitdata) {
   for(fit in lfitdata) {
     eldata <- do.call(paste("q", fit$distname, sep=""), c(list(x), as.list(fit$estimate)))
     aux2 <- data.frame(data=y, Density=eldata, Distributions=fit$distname)
+    Density <- Distributions <- NULL
     resplot <- resplot + geom_line(data=aux2, size=0.25, aes(x=data, y=Density, colour=Distributions))
   }
   resplot
