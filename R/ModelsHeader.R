@@ -205,7 +205,7 @@ summaryWtWqt <- function(object, t, graphics="ggplot2") {
            "ggplot2" = {
                   value <- variable <- NULL
                   data <- melt(data, id.var="t") 
-                  qplot(t, value, data=data, geom="line", colour=variable, 
+                  ggplot2::qplot(t, value, data=data, geom="line", colour=variable, 
                         main=paste("Distribution functions of waiting times (t from ", data$t[1], " to ", data$t[length(data$t)], ")", sep=""),
                         ylab="Cumulative Probability") + scale_colour_discrete(name="")
            })
@@ -233,12 +233,12 @@ summaryPnQn <- function(object, n, graphics="ggplot2") {
              tryCatch({
                value <- variable <- NULL
                data <- melt(data.frame(n, "Pn"=Pn(object, n), "Qn"=Qn(object, n)), id.var="n")
-              qplot(n, value, data=data, geom="bar", stat="identity", fill=variable, position="dodge",
+              ggplot2::qplot(n, value, data=data, geom="bar", stat="identity", fill=variable, position="dodge",
                     main=paste("Probabilities of n customers (n from ", n[1], " to ", n[length(n)], ")", sep=""),
                     ylab="Probability") + scale_fill_discrete(name="")
              }, error= function(e) {
                  data <- melt(data.frame(n, "Pn"=Pn(object, n)), id.var="n")
-                 qplot(n, value, data=data, geom="bar", stat="identity", fill=variable,
+                 ggplot2::qplot(n, value, data=data, geom="bar", stat="identity", fill=variable,
                        main=paste("Probability of n customers (n from ", n[1], " to ", n[length(n)], ")", sep=""),
                        ylab="Probability") + scale_fill_discrete(name="")
              })

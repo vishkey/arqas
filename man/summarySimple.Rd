@@ -6,7 +6,7 @@
 \alias{summarySimple.list}
 \title{Shows a plot of the evolution of a variable during the simulation}
 \usage{
-summarySimple(object, minrange, maxrange, var, graphics, ...)
+summarySimple(object, minrange, maxrange, var, graphics, depth, ...)
 
 \method{summarySimple}{SimulatedModel}(object, minrange, maxrange, var,
   graphics = "ggplot2", depth = maxrange - minrange, ...)
@@ -29,9 +29,9 @@ summarySimple(object, minrange, maxrange, var, graphics, ...)
 
 \item{graphics}{Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2}
 
-\item{...}{Further arguments passed to or from other methods.}
-
 \item{depth}{Number of points printed in the plot}
+
+\item{...}{Further arguments passed to or from other methods.}
 
 \item{nSimulation}{Selects one simulation for the list to show when var is "Clients"}
 }

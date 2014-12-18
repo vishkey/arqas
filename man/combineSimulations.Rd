@@ -9,7 +9,7 @@ combineSimulations(listsims)
 \item{listsims}{A list of independent simulations}
 }
 \value{
-an object with the mean and variance of parameters L, Lq, W, Wq, Rho and Eff.
+an object with the mean and estimated precision of estimated parameters L, Lq, W, Wq, Rho and Eff.
 }
 \description{
 Combines a list of independent simulations of a queueing model, calculating the mean and variance of each characteristic of interest

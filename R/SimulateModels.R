@@ -16,7 +16,7 @@ belong <- function(obj, packagename) {
 #' Combines a list of independent simulations of a queueing model, calculating the mean and variance of each characteristic of interest
 #' 
 #' @param listsims A list of independent simulations
-#' @return an object with the mean and variance of parameters L, Lq, W, Wq, Rho and Eff.
+#' @return an object with the mean and estimated precision of estimated parameters L, Lq, W, Wq, Rho and Eff.
 #' @examples
 #' combineSimulations(G_G_1(nsim=5))
 #' @export
@@ -2381,7 +2381,7 @@ print.SimulatedNetwork <- function(x, ...) {
 #' @param nSimulation Selects one simulation for the list to show when var is "Clients"
 #' @param ... Further arguments passed to or from other methods.
 #' @export
-summarySimple <- function(object, minrange, maxrange, var, graphics, ...) {UseMethod("summarySimple", object)}
+summarySimple <- function(object, minrange, maxrange, var, graphics, depth, ...) {UseMethod("summarySimple", object)}
 
 
 #' @rdname summarySimple
@@ -2400,7 +2400,7 @@ summarySimple.SimulatedModel <- function(object, minrange, maxrange, var, graphi
                                               legend('bottomright', c('", var, "'), lty =c(1), col = c('red'), bty='t')\n
                                               title(main='Evolution of ", var, "')", sep="")))},
          "ggplot2" = {data <- melt(data, id.var="t")
-                      eval(parse(text=paste("qplot(t, value, data=data, geom='line', colour=variable, 
+                      eval(parse(text=paste("ggplot2::qplot(t, value, data=data, geom='line', colour=variable, 
                       main='Evolution of ", var, ".', ylab='", var , "') + geom_vline(xintercept=object$out$historic[object$Staclients, 'tClient'], linetype='dotdash') + scale_colour_discrete(name='') + theme(legend.position='none')", sep="")))})
 }
 
@@ -2419,7 +2419,7 @@ summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, grap
                                               title(main='Evolution of ", var, "')", sep="")))},
          "ggplot2" = {
                       truerange <- seq(minrange, maxrange, length.out=depth)
-                      cumPlot <- qplot(x=ifelse(is.na(aux<-object$out$historic[1, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[1, var, truerange]), 0, aux), geom="line", colour="red")
+                      cumPlot <- ggplot2::qplot(x=ifelse(is.na(aux<-object$out$historic[1, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[1, var, truerange]), 0, aux), geom="line", colour="red")
                       for(node in 2:(dim(object$out$historic)[1])) {
                         cumPlot <- cumPlot + geom_line(aes(x=ifelse(is.na(aux<-object$out$historic[node, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[node, var, truerange]), 0, aux)), colour=colours(distinct=TRUE)[node*2+1]) + theme(element_rect(colour = node*2+1))
                       } 
@@ -2460,11 +2460,11 @@ summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot
       sim <- x <- val <- NULL
       if (length(dimensions) == 2) 
           if (var == "Clients")
-            ggplot(subset(plotdata, sim == nSimulation), aes(x=x, y=val, order=factor(sim))) + geom_histogram(stat="identity", na.rm=TRUE) + ggtitle(paste("Evolution of ", var, " in simulation ", nSimulation, sep="")) + theme(legend.position="none")
+            ggplot2::ggplot(subset(plotdata, sim == nSimulation), aes(x=x, y=val, order=factor(sim))) + geom_histogram(stat="identity", na.rm=TRUE) + ggtitle(paste("Evolution of ", var, " in simulation ", nSimulation, sep="")) + theme(legend.position="none")
           else
-            ggplot(plotdata, aes(x=x, y=val, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
+            ggplot2::ggplot(plotdata, aes(x=x, y=val, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
       else 
-        ggplot(plotdata, aes(x=x, y=val, colour=factor(node), alpha=0.95, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + scale_colour_discrete(name="Nodes") + scale_alpha_continuous(name="", breaks=NULL, labels=NULL)
+        ggplot2::ggplot(plotdata, aes(x=x, y=val, colour=factor(node), alpha=0.95, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + scale_colour_discrete(name="Nodes") + scale_alpha_continuous(name="", breaks=NULL, labels=NULL)
 }
 
 

@@ -224,7 +224,7 @@ FWq.M_M_S <- function(qm, x) {
 M_M_1_K <- function(lambda=3, mu=6, k=2) {
   if (!is.numeric(lambda) | lambda <= 0) stop("Argument 'lambda' must be greather than zero")
   if (!is.numeric(mu)     | mu <= 0) stop("Argument 'mu' must be greather than zero")
-  if (!is.numeric(k)      | k <= 0) stop ("Argument 'k' must be greather than zero")
+  if (!is.numeric(k)      | k < 0) stop ("Argument 'k' must be greather than zero")
   
   obj <- MarkovianModel(Exp(lambda), Exp(mu))
   obj$servers <- 1
@@ -377,7 +377,7 @@ M_M_S_K <- function(lambda=3, mu=6, s=2, k=3)  {
   if (!is.numeric(lambda) | lambda <= 0) stop("Argument 'lambda' must be greather than zero")
   if (!is.numeric(mu)     | mu <= 0) stop("Argument 'mu' must be greather than zero")
   if (!is.numeric(s)      | s <= 0) stop ("Argument 's' must be greather than zero")
-  if (!is.numeric(k)      | k <= 0) stop ("Argument 'k' must be greather than zero")
+  if (!is.numeric(k)      | k < 0) stop ("Argument 'k' must be greather than zero")
   
   obj <- MarkovianModel(Exp(lambda), Exp(mu))
   obj$servers <- s
@@ -493,10 +493,13 @@ FWq.M_M_S_K <- function(qm, x) {
   mu <- rate(qm$serviceDistribution)
   A <- S <- rep(1, length(x))
   B <- rep(Qn(qm, qm$servers), length(x))
-  for(n in (qm$servers+1):(qm$k+qm$servers-1)) {
-    A <- A*((qm$servers*mu*x)/(n-qm$servers))
-    S <- S + A
-    B <- B + Qn(qm, n)*S
+  if ((qm$servers+1) < (qm$k+qm$servers-1)) {
+    for(n in (qm$servers+1):(qm$k+qm$servers-1)) {
+      A <- A*((qm$servers*mu*x)/(n-qm$servers))
+      S <- S + A
+      B <- B + Qn(qm, n)*S
+      print(n)
+    }
   }
   return(1-B*exp(-qm$servers*mu*x)) 
 }
