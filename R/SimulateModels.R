@@ -484,7 +484,7 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/1/K model:
-#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{pn}{Vector of empirical steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
 #' \item{l}{Empirical number of customers in the system: \eqn{L}}
 #' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
 #' \item{w}{Empirical waiting time in the system: \eqn{W}}
@@ -679,7 +679,7 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/S/K model:
-#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{pn}{Vector of empirical steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
 #' \item{l}{Empirical number of customers in the system: \eqn{L}}
 #' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
 #' \item{w}{Empirical waiting time in the system: \eqn{W}}
@@ -1081,7 +1081,7 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/S/\eqn{\infty}/H model
-#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{pn}{Vector of empirical steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
 #' \item{l}{Empirical number of customers in the system:\eqn{L}}
 #' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
 #' \item{w}{Empirical waiting time in the system: \eqn{W}}
@@ -1302,7 +1302,7 @@ if (nproc > 1) {
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/1/S/\eqn{\infty}/H/Y model:
-#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{pn}{Vector of empirical steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
 #' \item{l}{Empirical number of customers in the system: \eqn{L}}
 #' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
 #' \item{w}{Empirical waiting time in the system: \eqn{W}}
@@ -1540,7 +1540,7 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
 #' @param nproc Processors used in the simulation.
 #' @return
 #' Returns the next information of a G/G/\eqn{\infty} model:
-#' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
+#' \item{pn}{Vector of empirical steady-state probabilities of having n customers in the system: \ifelse{latex}{\eqn{P_{n}}}{\out{<i>P<sub>n</sub></i>}}}
 #' \item{l}{Empirical number of customers in the system: \eqn{L}}
 #' \item{lq}{Empirical number of customers in the queue: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
 #' \item{w}{Empirical waiting time in the system: \eqn{W}}
@@ -1733,7 +1733,7 @@ SCN_example <- function (sta, trans) {
 #' \item{pn}{Vector of empirical steady-state probabilities positives of having n customers in the system: \ifelse{latex}{\eqn{P_n}}{\out{<i>P<sub>n</sub></i>}}}
 #' \item{l}{Vector of empirical number of customers in the nodes: \eqn{L}}
 #' \item{lq}{Vector of empirical number of customers in the queues of the nodes: \ifelse{latex}{\eqn{L_{q}}}{\out{<i>L<sub>q</sub></i>}}}
-#' \item{lqt}{Empirical number of customers in the all queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L_<sub>qTotal</sub></i>}}}
+#' \item{lqt}{Empirical number of customers in the all the queues: \ifelse{latex}{\eqn{L_{qTotal}}}{\out{<i>L_<sub>qTotal</sub></i>}}}
 #' \item{w}{Vector of empirical waiting times in the nodes: \eqn{W}}
 #' \item{wq}{Vector of empirical waiting times in the queues of the nodes: \ifelse{latex}{\eqn{W_{q}}}{\out{<i>W<sub>q</sub></i>}}}
 #' \item{eff}{Empirical system efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_{q})}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
@@ -1742,7 +1742,10 @@ SCN_example <- function (sta, trans) {
 #' @examples
 #' ClosedNetwork(serviceDistribution = c(Exp(5), Exp(5), Exp(10), Exp(15)),
 #'               s                   = c(2,2,1,1),
-#'               p                   = array(c(0.25,0.15,0.5,0.4,0.15,0.35,0.25,0.3,0.2,0.2,0.15,0.25,0.4,0.30,0.1,0.05), dim=c(4,4)),
+#'               p                   = matrix(c(0.25, 0.15, 0.2,  0.4,
+#'                                              0.15, 0.35, 0.2,  0.3,
+#'                                              0.5,  0.25, 0.15, 0.1,
+#'                                              0.4,  0.3,  0.25, 0.05), 4, byrow=T),
 #'               nClient             = 3,
 #'               staClients          = 10,
 #'               transitions         = 100,
@@ -2370,70 +2373,76 @@ print.SimulatedNetwork <- function(x, ...) {
 }
 
 
-#' Shows a plot of the evolution of a variable during the simulation
-#' 
-#' @param object Simulated Model
-#' @param minrange Number of customer to establish the start of the plot
-#' @param maxrange Number of customer to establish the end of the plot
-#' @param var Variable to show graphic (L, Lq, W, Wq, Clients, Intensity)
-#' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
-#' @param depth Number of points printed in the plot
-#' @param nSimulation Selects one simulation for the list to show when var is "Clients"
-#' @param ... Further arguments passed to or from other methods.
-#' @export
-summarySimple <- function(object, minrange, maxrange, var, graphics, depth, ...) {UseMethod("summarySimple", object)}
+# #' Shows a plot of the evolution of a variable during the simulation
+# #' 
+# #' @param object Simulated Model
+# #' @param minrange Number of customer to establish the start of the plot
+# #' @param maxrange Number of customer to establish the end of the plot
+# #' @param var Variable to show graphic (L, Lq, W, Wq, Clients, Intensity)
+# #' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
+# #' @param depth Number of points printed in the plot
+# #' @param nSimulation Selects one simulation for the list to show when var is "Clients"
+# #' @param ... Further arguments passed to or from other methods.
+# #' @export
+# summarySimple <- function(object, minrange, maxrange, var, graphics, depth, ...) {UseMethod("summarySimple", object)}
 
 
-#' @rdname summarySimple
-#' @method summarySimple SimulatedModel
+#' @rdname plot
+#' @method plot SimulatedModel
 #' @details
-#' \code{summarySimple.SimulatedModel} implements the function for an object of class SimulatedModel.
+#' \code{plot.SimulatedModel} implements the function for an object of class SimulatedModel.
 #' @export
-summarySimple.SimulatedModel <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange, ...) {
+plot.SimulatedModel <- function(object, minrange=1, maxrange, var="L", graphics="ggplot2", depth=maxrange-minrange, ...) {
   if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
   if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
   truerange <- seq(minrange, maxrange, length.out=depth)
-  eval(parse(text=paste("data <- data.frame(t=object$out$historic[truerange, 'tClient'], '", var, "'=object$out$historic[truerange, '", var, "'])", sep="")))
+  eval(parse(text=paste("data <- data.frame(n=object$out$historic[truerange, 'tClient'], '", var, "'=object$out$historic[truerange, '", var, "'])", sep="")))
   switch(graphics,
-        "graphics" =  {eval(parse(text=paste("plot(data$t, data$", var, ", col='red', type='l')\n
+        "graphics" =  {eval(parse(text=paste("plot(data$n, data$", var, ", col='red', type='l')\n
                                               abline(v=object$Staclients, untf = FALSE, col='black')\n
-                                              legend('bottomright', c('", var, "'), lty =c(1), col = c('red'), bty='t')\n
                                               title(main='Evolution of ", var, "')", sep="")))},
-         "ggplot2" = {data <- melt(data, id.var="t")
-                      eval(parse(text=paste("ggplot2::qplot(t, value, data=data, geom='line', colour=variable, 
+         "ggplot2" = {data <- reshape::melt(data, id.var="n")
+                      eval(parse(text=paste("ggplot2::qplot(n, value, data=data, geom='line', colour=variable, 
                       main='Evolution of ", var, ".', ylab='", var , "') + geom_vline(xintercept=object$out$historic[object$Staclients, 'tClient'], linetype='dotdash') + scale_colour_discrete(name='') + theme(legend.position='none')", sep="")))})
 }
 
-#' @rdname summarySimple
-#' @method summarySimple SimulatedNetwork
+#' @rdname plot
+#' @method plot SimulatedNetwork
 #' @details
-#' \code{summarySimple.SimulatedNetwork} implements the function for an object of class SimulatedNetwork.
+#' \code{plot.SimulatedNetwork} implements the function for an object of class SimulatedNetwork.
 #' @export
-summarySimple.SimulatedNetwork <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange, ...) {
+plot.SimulatedNetwork <- function(object, minrange=1, maxrange, var="L", graphics="ggplot2", depth=maxrange-minrange, nSimulation=NULL, ...) {
   if (is.null(object$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
   if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
+  truerange <- seq(minrange, maxrange, length.out=depth)
+  nnodes <- dim(object$out$historic)[1]
+  eval(parse(text=paste("data <- data.frame(n=NULL, var = NULL, node=NULL)\n
+                         for(i in 1:nnodes)\n 
+                            data <- rbind(data, data.frame(n=1:length(truerange), var=object$out$historic[i, '", var, "', truerange], node=rep(i, length(truerange))))\n",sep="")))
   switch(graphics,
-         "graphics" =  {eval(parse(text=paste("plot(data$t, data$", var, ", col='red', type='l')\n
-                                              abline(v=object$Staclients, untf = FALSE, col='black')\n
-                                              legend('bottomright', c('", var, "'), lty =c(1), col = c('red'), bty='t')\n
-                                              title(main='Evolution of ", var, "')", sep="")))},
+         "graphics" =  {plot(data$n[data$node==1], data$var[data$node==1], col=2, type='l', xlab="n", ylab=var)
+                        if (nnodes > 1){
+                          for(j in 2:nnodes){
+                            lines(data$n[data$node==j], data$var[data$node==j], col=j+1, type='l')
+                          }
+                        }
+                        abline(v=object$Staclients, untf = FALSE, col='black')
+                        legend('topright', paste('Node', 1:nnodes, sep=' '), lty =c(1), col = (1:nnodes)+1, bty='n')
+                        title(main=paste("Evolution of ", var, sep=""))},
          "ggplot2" = {
-                      truerange <- seq(minrange, maxrange, length.out=depth)
-                      cumPlot <- ggplot2::qplot(x=ifelse(is.na(aux<-object$out$historic[1, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[1, var, truerange]), 0, aux), geom="line", colour="red")
-                      for(node in 2:(dim(object$out$historic)[1])) {
-                        cumPlot <- cumPlot + geom_line(aes(x=ifelse(is.na(aux<-object$out$historic[node, "tClient", truerange]), 0, aux), y=ifelse(is.na(aux<-object$out$historic[node, var, truerange]), 0, aux)), colour=colours(distinct=TRUE)[node*2+1]) + theme(element_rect(colour = node*2+1))
-                      } 
-                      cumPlot
+                      ggplot2::ggplot(data, aes(x=n, y=var, colour=factor(node), order=factor(node))) +
+                               geom_line(na.rm=TRUE) +  xlab("n") + ylab(var) + 
+                               ggtitle(paste("Evolution of ", var, sep="")) + scale_colour_discrete(name="Nodes")
                      }
   )
 }
 
-#' @rdname summarySimple
-#' @method summarySimple list
+#' @rdname plot
+#' @method plot list
 #' @details
-#' \code{summarySimple.list} implements the function for an object of class list
+#' \code{plot.list} implements the function for an object of class list
 #' @export
-summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot2", depth=maxrange-minrange+1, nSimulation=1, ...) {
+plot.list <- function(object, minrange=1, maxrange, var="L", graphics="ggplot2", depth=maxrange-minrange+1, nSimulation=1, ...) {
       if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
       if (!is.numeric(nSimulation)) nSimulation <- 1
       firstHistoric <- object[[1]]$out$historic
@@ -2458,13 +2467,29 @@ summarySimple.list <- function(object, minrange, maxrange, var, graphics="ggplot
           index <<- index+1
       })
       sim <- x <- val <- NULL
-      if (length(dimensions) == 2) 
-          if (var == "Clients")
-            ggplot2::ggplot(subset(plotdata, sim == nSimulation), aes(x=x, y=val, order=factor(sim))) + geom_histogram(stat="identity", na.rm=TRUE) + ggtitle(paste("Evolution of ", var, " in simulation ", nSimulation, sep="")) + theme(legend.position="none")
-          else
-            ggplot2::ggplot(plotdata, aes(x=x, y=val, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
-      else 
-        ggplot2::ggplot(plotdata, aes(x=x, y=val, colour=factor(node), alpha=0.95, order=factor(sim))) + geom_line(na.rm=TRUE) + ggtitle(paste("Evolution of ", var, sep="")) + scale_colour_discrete(name="Nodes") + scale_alpha_continuous(name="", breaks=NULL, labels=NULL)
+      switch(graphics, 
+      "graphics"= {if (length(dimensions) == 2) 
+                     if (var == "Clients")
+                        barplot(plotdata$val[plotdata$sim==nSimulation], main = paste("Evolution of Clients in simulation ", nSimulation, sep=""), xlab="n", ylab="Number of clients")
+                     else {
+                        plot(plotdata$x[plotdata$sim==1], plotdata$val[plotdata$sim==1], col=2, type='l', xlab="n", ylab=var)
+                        if (dimensions[1] > 1)
+                            for(j in 2:dimensions[1])
+                              lines(plotdata$x[plotdata$sim==j], plotdata$val[plotdata$sim==j], col=2, type='l')
+                     }
+                   else {
+                     
+                   } 
+      },
+      "ggplot2" = {if (length(dimensions) == 2) 
+                      if (var == "Clients")
+                        ggplot2::ggplot(subset(plotdata, sim == nSimulation), aes(x=x, y=val, order=factor(sim))) + geom_histogram(stat="identity", na.rm=TRUE) + xlab("n") + ylab("Number of clients") + ggtitle(paste("Evolution of ", var, " in simulation ", nSimulation, sep="")) + theme(legend.position="none")
+                      else
+                        ggplot2::ggplot(plotdata, aes(x=x, y=val, order=factor(sim))) + geom_line(na.rm=TRUE) + xlab("n") + ylab(var) + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
+                  else 
+                    ggplot2::ggplot(plotdata, aes(x=x, y=val, colour=factor(node), alpha=0.95, order=factor(sim))) + geom_line(na.rm=TRUE) + xlab("n") + ylab(var) + ggtitle(paste("Evolution of ", var, sep="")) + scale_colour_discrete(name="Nodes") + scale_alpha_continuous(name="", breaks=NULL, labels=NULL)
+                  }
+      )
 }
 
 

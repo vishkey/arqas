@@ -93,7 +93,7 @@ Qn.M_M_1_INF_H <- function(qm, n) {
 #' \code{FWq.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
 #' @examples
 #' qm <- M_M_1_INF_H(20, 60, 10)
-#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the queue
+#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 units of time in the queue
 #' FWq(qm, c(0, 0.25, 0.5))
 #' @export
 FWq.M_M_1_INF_H <- function(qm, x) {
@@ -106,7 +106,7 @@ FWq.M_M_1_INF_H <- function(qm, x) {
 #' \code{FW.M_M_1_INF_H} implements the method for a M/M/1/\eqn{\infty}/H queueing model
 #' @examples
 #' qm <- M_M_1_INF_H(20, 60, 10)
-#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the system
+#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 units of time in the system
 #' FW(qm, c(0, 0.25, 0.5))
 #' @export
 FW.M_M_1_INF_H <- function(qm, x) {

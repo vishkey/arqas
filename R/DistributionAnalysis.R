@@ -1,7 +1,7 @@
-#' Computes the estimated parameters of the giving distributions for the input data
+#' Computes the estimated parameters of the distributions for the input data
 #' 
 #' @param data data to estimate parameters
-#' @param ldistr A list of distributions names for estimate its parameters
+#' @param ldistr A list of distributions
 #' @return A list of estimate parameters for each distribution
 #' @export
 #' @family DistributionAnalysis
@@ -20,10 +20,10 @@ fitData <- function (data, ldistr= c("exp", "norm", "weibull", "unif", "lnorm", 
 }
 
 
-#' Computes the p-value of the chi-square test and Kolmogorov-Smirnov test and each statistic value
+#' Computes the p-value of the chi-square test and Kolmogorov-Smirnov test
 #' 
 #' @param lfitdata a list of fitted data
-#' @return the p-values and the statistics values of the chi-square test and Kolmogorov-Smirnov test
+#' @return the p-values and the values of the statistics in the chi-square test and Kolmogorov-Smirnov test
 #' @export
 #' @family DistributionAnalysis
 goodnessFit <- function(lfitdata) {

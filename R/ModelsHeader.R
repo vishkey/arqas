@@ -40,7 +40,7 @@ FW <- function(qm, x) {UseMethod("FW", qm)}
 
 #'  Distribution function of the waiting time in the queue
 #'  
-#'  Returns the value of the cumulative distribution function of waiting time in the queue
+#'  Returns the value of the cumulative distribution function of the waiting time in the queue
 #'  \ifelse{latex}{\deqn{W_{q} = P(W_{q} \le x)}}{\out{<br><center><i>W<sub>q</sub> = P(W<sub>q</sub> &le; x)</i></center>}}
 #'  
 #'  @param qm Queueing model

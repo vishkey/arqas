@@ -79,7 +79,7 @@ FW.M_M_1 <- function(qm, x) {
 #' \code{FWq.M_M_1} implements the method for a M/M/1 queueing model
 #' @examples
 #' qm <- M_M_1(60, 80)
-#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 unit of times in the queue
+#' #Cumulative probabilites of waiting 0, 0.25 and 0.5 units of time in the queue
 #' FWq(qm, c(0, 0.25, 0.5))
 #' @export
 FWq.M_M_1 <- function(qm, x) {
