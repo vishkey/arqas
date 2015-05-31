@@ -7,5 +7,5 @@
     packageStartupMessage( 
       paste("\n Loading package arqas:", pkg.info["Title"], "\n"),
       paste(" version ", pkg.info["Version"], " (built on ", pkg.info["Date"], ").\n", sep=""),
-      " Copyright Borja Varela 2013.\n")
+      " Copyright Borja Varela 2015.\n")
 }

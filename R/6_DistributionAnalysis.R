@@ -4,6 +4,10 @@
 #' @param ldistr A list of distributions
 #' @return A list of estimate parameters for each distribution
 #' @export
+#' @examples
+#' mydata <- rnorm(100, 10, 0.5)
+#' 
+#' fitData(mydata)
 #' @family DistributionAnalysis
 fitData <- function (data, ldistr= c("exp", "norm", "weibull", "unif", "lnorm", "gamma")) {
   if (is.null(data)) stop("Argument 'data' must be an array of numeric values")
@@ -25,6 +29,10 @@ fitData <- function (data, ldistr= c("exp", "norm", "weibull", "unif", "lnorm", 
 #' @param lfitdata a list of fitted data
 #' @return the p-values and the values of the statistics in the chi-square test and Kolmogorov-Smirnov test
 #' @export
+#' @examples
+#' mydata <- rnorm(100, 10, 0.5)
+#' 
+#' goodnessFit(fitData(mydata))
 #' @family DistributionAnalysis
 goodnessFit <- function(lfitdata) {
   res <- data.frame(distrnames=NULL, chisq= NULL, chisq.pvalue=NULL, ks= NULL, ks.pvalue=NULL)
@@ -49,13 +57,10 @@ goodnessFit <- function(lfitdata) {
   return(res)
 }
 
-#' Shows three plots:
-#'      The histogram and theoretical densities
-#'      The empirical and thoeretical CDF's
-#'      The Q-Q plot
+#' Shows three plots:The histogram and theoretical densities, the empirical and theoretical CDF's and the Q-Q plot
 #' 
 #' @param lfitdata a list of fitted data 
-#' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
+#' @param graphics Type of graphics: "graphics" uses the basic R plot and "ggplot2" the library ggplot2
 #' @export
 #' @family DistributionAnalysis
 summaryFit <- function(lfitdata, graphics="ggplot2") {
@@ -161,32 +166,28 @@ qqcompggplot2 <- function(lfitdata) {
 }
 
 
-#-------------------------------------------------------------------------------
-# chisq.test.cont(x, distribution, nclasses, output, nestpar,...)
-#-------------------------------------------------------------------------------
-# Realiza el test ji-cuadrado de bondad de ajuste para una distribución continua
-# discretizando en intervalos equiprobables.
-# Parámetros:
-#   distribution = "norm","unif",etc
-#   nclasses = floor(length(x)/5)
-#   output = TRUE
-#   nestpar = 0= nº de parámetros estimados
-#   ... = parámetros distribución
-# Ejemplo:
-#   chisq.test.cont(x, distribution="norm", nestpar=2, mean=mean(x), sd=sqrt((nx-1)/nx)*sd(x))
-#-------------------------------------------------------------------------------
+#'Computes the chi-square fitness test for a continuous distribution, splited in equal probabilities intervals.
+#'
+#'@param x list of data
+#'@param distribution string that indicates the distribution to fit
+#'@param nclasses number of intervals
+#'@param output if is TRUE, prints the chi-square table
+#'@param nestpar numbr of estimated parameters
+#'@param ... distribution parameters
+#'@return the computed statistic and the p-value
+#'@keywords internal
 chisq.test.cont <- function(x, distribution = "norm", nclasses = min(100, max(3, floor(length(x)/5))), 
                             output = FALSE, nestpar = 0, ...) {
-  # Funciones distribución
+  # Distribution functions
   q.distrib <- eval(parse(text = paste("q", distribution, sep = "")))
   d.distrib <- eval(parse(text = paste("d", distribution, sep = "")))
   
-  # Puntos de corte
+  # cut points
   q <- q.distrib((1:(nclasses - 1))/nclasses, ...)
   tol <- sqrt(.Machine$double.eps)
   xbreaks <- c(min(x) - tol, q, max(x) + tol)
   
-  # Gráficos y frecuencias
+  # Plots and frequencies
   if (output) {
     xhist <- hist(x, breaks = xbreaks, freq = FALSE, lty = 2, border = "grey50")
     curve(d.distrib(x, ...), add = TRUE)
@@ -194,8 +195,8 @@ chisq.test.cont <- function(x, distribution = "norm", nclasses = min(100, max(3,
     xhist <- hist(x, breaks = xbreaks, plot = FALSE)
   }
   
-  # Cálculo estadístico y p-valor
-  O <- xhist$counts  # Equivalente a table(cut(x, xbreaks)) pero más eficiente
+  # statistic and p-value compution
+  O <- xhist$counts  # same as table(cut(x, xbreaks)) but more efficient
   E <- length(x)/nclasses
   DNAME <- deparse(substitute(x))
   METHOD <- "Pearson's Chi-squared test"
@@ -205,7 +206,7 @@ chisq.test.cont <- function(x, distribution = "norm", nclasses = min(100, max(3,
   names(PARAMETER) <- "df"
   PVAL <- pchisq(STATISTIC, PARAMETER, lower.tail = FALSE)
   
-  # Preparar resultados
+  # Prepare results
   classes <- format(xbreaks)
   classes <- paste("(", classes[-(nclasses + 1)], ",", classes[-1], "]", 
                    sep = "")

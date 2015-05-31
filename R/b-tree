@@ -1,4 +1,0 @@
-bTree <- function() {
-    obj <- list(l=NULL, r=NULL)
-    old
-}
