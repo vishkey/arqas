@@ -33,12 +33,13 @@ Tamdem <- function(n) {
 #' \item{wqt}{Total waiting time in all the queues: \ifelse{latex}{\eqn{W_{qTotal}}}{\out{<i>W<sub>qTotal</sub></i>}}}
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 #' @examples
-#' #Two servers recieve 20 tasks for minute the first one,
-#' #and 30 tasks for minute the second one.
+#' #Two servers receive a number of tasks per minute;
+#' #20 tasks per minute in the case of the first
+#' #server and 30 tasks per minute in the second one.
 #' #The unique processsor in the first server can manage
-#' #100 tasks for minute, while the two processors in the
-#' #second server only can manage 25 task for minute. 
-#' #When a task is near to finish in the server 2, it creates
+#' #100 tasks per minute, while the two processors in the
+#' #second server only can manage 25 task per minute. 
+#' #When a task is close to finish in the server 2, it creates
 #' #a new task in the server 1 with a probability of 25%,
 #' #the task ends in the other case.
 #' #The tasks that ends in the server 1 creates a new one
@@ -195,14 +196,13 @@ f_close <- function(ps, i, n) {
 #' @keywords internal
 calculateG <- function(ps) { 
   res <- matrix(c(1), nrow=ps$k, ncol=(ps$n+1))
-  for(i in 2:(ps$n+1)) {
-    res[1,i] <- f_close(ps, 1, i-1)
-    if (ps$k > 1)
-      for(j in 2:ps$k)
-        res[j, i] <- sum(res[j-1, i:1] * f_close(ps, j, 0:(i-1)))
-  }
+  res[1, 2:(ps$n+1)] <- f_close(ps, 1, 1:ps$n)
+  if (ps$k > 1)
+    for(i in 2:(ps$n+1)) {
+        for (j in 2:ps$k)
+          res[j, i] <- sum(res[j-1, i:1] * f_close(ps, j, 0:(i-1)))
+    }
   return(res)
-  
 }
 
 #' Probability of i clients in the last node of the network
@@ -244,13 +244,15 @@ CN_example <- function() {
 #' \item{eff}{System efficiency: \ifelse{latex}{\eqn{Eff = W/(W-W_q)}}{\out{<i>Eff = W/(W-W<sub>q</sub></i>)}}}
 #' @export 
 #' @examples
-#' #An system have 4 workstations interconnected.
-#' #For the control of the system there is three
-#' #tasks in continuous execution in some of the
-#' #workstations. Once the task ends, this creates
-#' #a copy of itself and sends it tu execute in
-#' #some of the other three, following the next
-#' #probabilities table
+#' # A system is composed of 4 workstations
+#' #interconnected. The monitoring of the
+#' #system is carried out by three programs
+#' #in continuous execution in some of the
+#' #workstations. Once each program ends,
+#' #it creates a copy of itself and sends this
+#' #copy to be executed in any of the
+#' #workstations, taking into account the
+#' #following probabilities:
 #' 
 #' # Origin-destiny     1      2     3     4
 #' #      1           0.25   0.15  0.20  0.40
@@ -260,10 +262,10 @@ CN_example <- function() {
 #' 
 #' #The servers 1 and 2 have two processors and
 #' #each of one have a process time with exponential
-#' #distribution and capacitiy of 5 tasks for
+#' #distribution and capacitiy of 5 tasks per
 #' #minute.
 #' #The servers 3 and 4 have a single processor
-#' #and they can serve 10 and 15 task for minute
+#' #and they can serve 10 and 15 task per minute
 #' #respectively.
 #' 
 #' ClosedJacksonNetwork(mu=c(5,5,10,15),
@@ -283,7 +285,9 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=matrix(c(0.25,
   
   sizemu <- length(mu)
   sizes <- length(s)
-  sizep <- if(is.null(output <- nrow(p))) length(p) else output
+  sizep <- nrow(p)
+  
+  if(is.null(sizep)) sizep <- length(p)
   
   if (sizemu != sizes || sizemu != sizep || sizes != sizep)
     stop("Arguments 'mu', 's' and 'p' must have the same length")
@@ -296,17 +300,15 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=matrix(c(0.25,
       }
   obj <- list(mu=mu, servers=s, prob=p, n=n)
   obj$k <- k <- length(mu)
+  id <- diag(k)
+  trasp <- t(p)
   if (!is.null(numCol <- ncol(p)) && length(p) > 2) {
-     id <- diag(k)
-     trasp <- t(p)
-     id <- id[-nrow(id),]
-     aux <- id - trasp[-nrow(trasp),]
-     A <- aux[,-1]
-     B <- -aux[,1]
+     id <- as.matrix(id[-k, -1])
+     A <- id - as.matrix(trasp[-k , -1])
+     B <- as.matrix(trasp[-k, 1])
+     B[1,1] <- -1 + B[1,1]
+     
      obj$lambda <- lambda <- c(1, solve(A, B))
-     print(lambda)
-  } else if (length(p) == 2) {
-     obj$lambda <- lambda <- c(1, trasp[2,1]/trasp[2,2])  
   } else {
      obj$lambda <- lambda <- c(1)
   }
@@ -323,14 +325,9 @@ ClosedJacksonNetwork <- function(mu=c(5,5,10,15), s=c(2,2,1,1), p=matrix(c(0.25,
     if (is.null(obj$out$gkn)) obj$out$gkn <- obj$g[k, n+1]
     l <- sum(1:n * pnlast(obj, 1:n))
     if (node == k) {
-      barlambda <- 0
-      for (i in 1:n) {
-        if (i <= obj$servers[k]) {
-          barlambda <- barlambda + obj$mu[k]*i*pnlast(obj, i)
-        } else {
-          barlambda <- barlambda + obj$mu[k]*obj$servers[k]*pnlast(obj, i)
-        }
-      }
+      i <- 1:n
+      auxmult <- ifelse(i <= obj$servers[k], i, obj$servers[k])
+      barlambda <- tail(cumsum(obj$mu[k]* auxmult * pnlast(obj, 1:n)), n=1)
       c <- barlambda/obj$lambda[k]
     } else {
       barlambda <- c*obj$lambda[node]

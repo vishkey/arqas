@@ -29,7 +29,7 @@ combineSimulations <- function(listsims) {
   else if (length(listsims) == 1) return(listsims[[1]])
   
   getAttribute <- function(qm, attr) {return(getElement(getElement(qm, "out"), attr))}
-
+    
   l <- sapply(listsims, getAttribute, "l")
   lq <- sapply(listsims, getAttribute, "lq")
   w <- sapply(listsims, getAttribute, "w")
@@ -38,26 +38,89 @@ combineSimulations <- function(listsims) {
   eff <- sapply(listsims, getAttribute, "eff")
   
   res <- listsims[[1]]
-  k <- 2/sqrt(length(args))
   res$out$l <- if(is.null(nrow(l)))
-                 list(mean=mean(l), error=k*sd(l))
+                 list(mean=mean(l), sd=sd(l), summary = summary(l))
                else
-                 list(mean=sapply(1:nrow(l), function(i){mean(l[i,])}), error=sapply(1:nrow(l), function(i){k*sd(l[i,])}))
+                 list(mean=sapply(1:nrow(l), function(i){mean(l[i,])}), sd=sapply(1:nrow(l), function(i){sd(l[i,])}), summary=sapply(1:nrow(l), function(i){summary(l[i,])}))
   res$out$lq <- if(is.null(nrow(lq)))
-                   list(mean=mean(lq), error=k*sd(lq))
+                   list(mean=mean(lq), sd=sd(lq), summary = summary(lq))
                 else
-                 list(mean=sapply(1:nrow(lq), function(i){mean(lq[i,])}), error=sapply(1:nrow(lq), function(i){k*sd(lq[i,])}))
+                 list(mean=sapply(1:nrow(lq), function(i){mean(lq[i,])}), sd=sapply(1:nrow(lq), function(i){sd(lq[i,])}), summary=sapply(1:nrow(l), function(i){summary(lq[i,])}))
   res$out$w <- if(is.null(nrow(w)))
-                 list(mean=mean(w), error=k*sd(w))
+                 list(mean=mean(w), sd=sd(w), summary = summary(w))
                else
-                 list(mean=sapply(1:nrow(w), function(i){mean(w[i,])}), error=sapply(1:nrow(w), function(i){k*sd(w[i,])}))
+                 list(mean=sapply(1:nrow(w), function(i){mean(w[i,])}), sd=sapply(1:nrow(w), function(i){sd(w[i,])}), summary=sapply(1:nrow(l), function(i){summary(w[i,])}))
   res$out$wq <- if(is.null(nrow(wq)))
-                  list(mean=mean(wq), error=k*sd(wq))
+                  list(mean=mean(wq), sd=sd(wq), summary = summary(wq))
                 else
-                  list(mean=sapply(1:nrow(wq), function(i){mean(wq[i,])}), error=sapply(1:nrow(wq), function(i){k*sd(wq[i,])}))
-  res$out$rho <- list(mean=mean(rho), error=k*sd(rho))
-  res$out$eff <- list(mean=mean(eff), error=k*sd(eff))
+                  list(mean=sapply(1:nrow(wq), function(i){mean(wq[i,])}), sd=sapply(1:nrow(wq), function(i){sd(wq[i,])}), summary=sapply(1:nrow(l), function(i){summary(wq[i,])}))
+  res$out$rho <- list(mean=mean(rho), sd=sd(rho), summary = summary(rho))
+  res$out$eff <- list(mean=mean(eff), sd=sd(eff), summary = summary(eff))
+  
+  if (is.null(nrow(wq))) {
+    sizepn <- function(qm) {return(length(getAttribute(qm, "pn")))}
+    maxsizepn <- max(sapply(listsims, sizepn))
+    
+    getPn <- function(qm) {aux <- getAttribute(qm, "pn")
+                           if ((dif <- maxsizepn - length(aux)) > 0)
+                             aux <- c(aux, rep(NA, dif))
+                           return(aux)}
+    pn <- sapply(listsims, getPn)
+    res$out$pn <- apply(pn, 1, mean, na.rm = TRUE)
+  } else {
+    sizepn <- function(qm) {return(dim(getAttribute(qm, "pn"))[1])}
+    maxsizepn <- max(sapply(listsims, sizepn))
+    
+    pn <- array(NA, dim=c(maxsizepn, length(listsims[[1]]$s), length(listsims)))
+    for (i in 1:length(listsims)) {
+        aux <- getAttribute(listsims[[i]], "pn")
+        dims <- dim(aux)
+        if ((dif <- maxsizepn - dims[1]) > 0)
+          aux <- rbind(aux, matrix(NA, nrow=dif, ncol=dims[2]))
+        pn[,,i] <- aux
+    }
+    res$out$pn <- apply(pn, c(1,2), mean, na.rm=TRUE) 
+  }
   return(res)
+}
+
+#' Parallelize an queue model function between multiple processors
+#' 
+#' @param modelfunction Function that implements a simulated queue model
+#' @param parameters List of parameters of the simulated queue model
+#' @param nsim Number of simulations
+#' @param nproc Processors to use in the simulation.
+#' @return The main characteristcs of the given model
+#' @keywords internal
+#' @export
+ParallelizeSimulations <- function(modelfunction, parameters, nsim, nproc) {
+  if (nproc > 1) {
+    cl <- parallel::makeCluster(nproc)
+    registerDoParallel(cl, cores=nproc)
+    simulations <- NULL
+    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
+      belong <- function(obj, packagename) {
+        if (length(obj) > 1)
+          packageobj <- sapply(lapply(obj, class), attr, "package")
+        else
+          packageobj <- attr(class(obj), "package")
+        
+        return(all(packageobj==packagename))
+      }
+      res <- list()
+      for(i in 1:simulations) {
+        res <- c(res, list(do.call(modelfunction, parameters)))
+      }
+      return(res)
+    }
+    do.call(parallel::stopCluster, list(cl))
+    return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
+  } else {
+    res <-list()
+    for(i in 1:nsim)
+      res <- c(res, list(do.call(modelfunction, parameters)))
+    return(if (length(res)==1) res[[1]] else res)
+  }
 }
 
 #' Obtains the main characteristics of a G/G/1 model by simulation
@@ -88,9 +151,9 @@ combineSimulations <- function(listsims) {
 #' @family SimulatedModels
 
 G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), staClients = 100, nClients = 1000, historic = FALSE, nsim=10, nproc=1) {
-      if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-      if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
-      
+      if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+      if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
+  
       G_G_1_secuential <- function(arrivalDistribution, serviceDistribution, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
@@ -216,7 +279,7 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
         if (length(minprob) > 0)
           pn <- tnClients[1:max(minprob)]/cron
         else
-          pn <- c()
+          pn <- c(0, 0)
         if (historic)
           obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
         else
@@ -224,34 +287,9 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
         oldClass(obj) <-  c("G_G_1", "SimulatedModel")
         
         return(obj)
-    }      
-    if (nproc > 1) {
-      cl <- parallel::makeCluster(nproc)
-      registerDoParallel(cl, cores=nproc)
-      simulations <- NULL
-      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-        belong <- function(obj, packagename) {
-          if (length(obj) > 1)
-            packageobj <- sapply(lapply(obj, class), attr, "package")
-          else
-            packageobj <- attr(class(obj), "package")
-          
-          return(all(packageobj==packagename))
-        }
-        res <- list()
-        for(i in 1:simulations) {
-          res <- c(res, list(G_G_1_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)))
-        }
-        return(res)
-      }
-      parallel::stopCluster(cl)
-      return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-    } else {
-      res <-list()
-      for(i in 1:nsim)
-        res <- c(res, list(G_G_1_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)))
-      return(if(length(res)==1) res[[1]] else res)
-    }
+    }  
+    
+    ParallelizeSimulations(G_G_1_secuential, list(arrivalDistribution, serviceDistribution, staClients, nClients, historic), nsim, nproc)
 }
 
 #' Obtains the main characteristics of a G/G/s model by simulation
@@ -282,9 +320,9 @@ G_G_1 <- function(arrivalDistribution = Exp(3), serviceDistribution = Exp(6), st
 #' @family SimulatedModels
 
 G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-    if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-    if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")  
-    
+   if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+   if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
+  
     G_G_S_secuential <- function(arrivalDistribution, serviceDistribution, s, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
@@ -294,6 +332,9 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
         
         tArr <- r(arrivalDistribution) (nClients+staClients)
         tServ <- r(serviceDistribution) (nClients+staClients)
+        if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+        if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+        
         iArr <-1
         iServ <- 0
         bussyservs <- numeric()
@@ -433,7 +474,12 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
         wq <- d/nClients
         eff <- w/(w-wq)
         rho <- (l-lq)/s
-        pn <- tnClients[1:max(which(tnClients>0))]/cron
+        
+        minprob <- which(tnClients>(.Machine$double.eps ^ 0.5))
+        if (length(minprob) > 0)
+          pn <- tnClients[1:max(minprob)]/cron
+        else
+          pn <- c(0, 0)
         if (historic)
           obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
         else
@@ -442,33 +488,7 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
         
         return(obj)
     }
-    if (nproc > 1) {
-      cl <- parallel::makeCluster(nproc)
-      registerDoParallel(cl, cores=nproc)
-      simulations <- NULL
-      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-        belong <- function(obj, packagename) {
-          if (length(obj) > 1)
-            packageobj <- sapply(lapply(obj, class), attr, "package")
-          else
-            packageobj <- attr(class(obj), "package")
-          
-          return(all(packageobj==packagename))
-        }
-        res <- list()
-        for(i in 1:simulations) {
-          res <- c(res, list(G_G_S_secuential(arrivalDistribution, serviceDistribution, s, staClients, nClients, historic)))
-        }
-        return(res)
-      }
-      parallel::stopCluster(cl)
-      return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-    } else {
-      res <-list()
-      for(i in 1:nsim)
-        res <- c(res, list(G_G_S_secuential(arrivalDistribution, serviceDistribution, s, staClients, nClients, historic)))
-      return(if (length(res)==1) res[[1]] else res)
-    }
+    ParallelizeSimulations(G_G_S_secuential, list(arrivalDistribution, serviceDistribution, s, staClients, nClients, historic), nsim, nproc)
 }
 
 #'Obtains the main characteristics of a G/G/1/K model by simulation
@@ -499,9 +519,9 @@ G_G_S <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, 
 #' @family SimulatedModels
 
 G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-      if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-      if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
-      
+      if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+      if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
+  
       G_G_1_K_secuential <- function(arrivalDistribution, serviceDistribution, K, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
@@ -511,6 +531,9 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
         
         tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
         tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+        if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+        if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+        
         iArr <- iServ <- 1
         sysClients <- simClients<- 0
         cron <- d <- c <- 0
@@ -627,7 +650,11 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
         wq <- d/nClients
         rho <- l-lq
         eff <- w/(w-wq)
-        pn <- tnClients[1:max(which(tnClients>0))]/cron
+        minprob <- which(tnClients>(.Machine$double.eps ^ 0.5))
+        if (length(minprob) > 0)
+          pn <- tnClients[1:max(minprob)]/cron
+        else
+          pn <- c(0, 0)
         if (historic)
           obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
         else
@@ -636,33 +663,8 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
         
         return(obj)
     }
-    if (nproc > 1) {
-      cl <- parallel::makeCluster(nproc)
-      registerDoParallel(cl, cores=nproc)
-      simulations <- NULL
-      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-        belong <- function(obj, packagename) {
-          if (length(obj) > 1)
-            packageobj <- sapply(lapply(obj, class), attr, "package")
-          else
-            packageobj <- attr(class(obj), "package")
-          
-          return(all(packageobj==packagename))
-        }
-        res <- list()
-        for(i in 1:simulations) {
-          res <- c(res, list(G_G_1_K_secuential(arrivalDistribution, serviceDistribution, K, staClients, nClients, historic)))
-        }
-        return(res)
-      }
-      parallel::stopCluster(cl)
-      return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-    } else {
-      res <-list()
-      for(i in 1:nsim)
-        res <- c(res, list(G_G_1_K_secuential(arrivalDistribution, serviceDistribution, K, staClients, nClients, historic)))
-      return(if (length(res)==1) res[[1]] else res)
-    }
+    
+    ParallelizeSimulations(G_G_1_K_secuential, list(arrivalDistribution, serviceDistribution, K, staClients, nClients, historic), nsim, nproc)
 }
 
 #' Obtains the main characteristics of a G/G/s/K model by simulation
@@ -694,9 +696,9 @@ G_G_1_K <- function (arrivalDistribution=Exp(3), serviceDistribution=Exp(6), K=2
 #' @family SimulatedModels
 
 G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2, K=3, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-    if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-    if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")   
-    
+  if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
+  
     G_G_S_K_secuential <- function(arrivalDistribution, serviceDistribution, s, K, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
         if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
@@ -707,6 +709,9 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
         
         tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
         tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+        if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+        if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+        
         iArr <- iServ <- 1
         bussyservers <- rep(NA, s)
         sysClients <- simClients<- 0
@@ -838,7 +843,13 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
         wq <- d/nClients
         rho <- (l-lq)/s
         eff <- w/(w-wq)
-        pn <- tnClients[1:max(which(tnClients>0))]/cron
+        minprob <- which(tnClients>(.Machine$double.eps ^ 0.5))
+        if (length(minprob) > 0)
+          pn <- tnClients[1:max(minprob)]/cron
+        else {
+          pn <- c(0, 0)
+        }
+        
         if (historic)
           obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
         else
@@ -847,33 +858,7 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
         
         return(obj)
     }
-    if (nproc > 1) {
-      cl <- parallel::makeCluster(nproc)
-      registerDoParallel(cl, cores=nproc)
-      simulations <- NULL
-      parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-        belong <- function(obj, packagename) {
-          if (length(obj) > 1)
-            packageobj <- sapply(lapply(obj, class), attr, "package")
-          else
-            packageobj <- attr(class(obj), "package")
-          
-          return(all(packageobj==packagename))
-        }
-        res <- list()
-        for(i in 1:simulations) {
-          res <- c(res, list(G_G_S_K_secuential(arrivalDistribution, serviceDistribution, s, K, staClients, nClients, historic)))
-        }
-        return(res)
-      }
-      parallel::stopCluster(cl)
-      return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-    } else {
-      res <-list()
-      for(i in 1:nsim)
-        res <- c(res, list(G_G_S_K_secuential(arrivalDistribution, serviceDistribution, s, K, staClients, nClients, historic)))
-      return(if (length(res)==1) res[[1]] else res)
-    }
+    ParallelizeSimulations(G_G_S_K_secuential, list(arrivalDistribution, serviceDistribution, s, K, staClients, nClients, historic), nsim, nproc)
 }
 
 
@@ -905,8 +890,8 @@ G_G_S_K <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=2,
 #' @family SimulatedModels
 
 G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), H=5, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+  if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
   
   G_G_1_INF_H_secuential <- function(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic) {
     if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
@@ -917,6 +902,9 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
     
     tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
     tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+    if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+    if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+    
     possibleClients <- tArr[1:H]
     iServ <- 1
     iArr <- H+1
@@ -1028,8 +1016,12 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
     wq <- d/nClients
     rho <- l - lq
     eff <- w/(w-wq)
-    #pn <- tnClients[1:max(which(tnClients>0))]/cron
-    pn <- NA
+    minprob <- which(tnClients>(.Machine$double.eps ^ 0.5))
+    if (length(minprob) > 0)
+      pn <- tnClients[1:max(minprob)]/cron
+    else
+      pn <- c(0, 0)
+    
     if (historic)
       obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
     else
@@ -1038,33 +1030,7 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
     oldClass(obj) <-  c("G_G_1_INF_H", "SimulatedModel")
     return(obj)
   }
-  if (nproc > 1) {
-    cl <- parallel::makeCluster(nproc)
-    registerDoParallel(cl, cores=nproc)
-    simulations <- NULL
-    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-      belong <- function(obj, packagename) {
-        if (length(obj) > 1)
-          packageobj <- sapply(lapply(obj, class), attr, "package")
-        else
-          packageobj <- attr(class(obj), "package")
-        
-        return(all(packageobj==packagename))
-      }
-      res <- list()
-      for(i in 1:simulations) {
-        res <- c(res, list(G_G_1_INF_H_secuential(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic)))
-      }
-      return(res)
-    }
-    parallel::stopCluster(cl)
-    return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-  } else {
-    res <-list()
-    for(i in 1:nsim)
-      res <- c(res, list(G_G_1_INF_H_secuential(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic)))
-    return(if (length(res)==1) res[[1]] else res)
-  }
+  ParallelizeSimulations(G_G_1_INF_H_secuential, list(arrivalDistribution, serviceDistribution, H, staClients, nClients, historic), nsim, nproc)
 }
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H  model by simulation
@@ -1096,9 +1062,9 @@ G_G_1_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
 #' @family SimulatedModels
 
 G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=3, H=5, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-    if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-    if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")   
-    
+  if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
+  
     G_G_S_INF_H_secuential <- function(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic) {
           if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
           if (!belong(serviceDistribution, "distr")) stop("Argument 'serviceDistribution'must be a valid Class of the Distr package")
@@ -1109,6 +1075,9 @@ G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
       
           tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
           tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+          if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+          if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+          
           possibleClients <- tArr[1:H]
           bussyservers <- rep(NA, s)
           iServ <- 1
@@ -1250,7 +1219,11 @@ G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
           wq <- d/nClients
           rho <- (l - lq)/s
           eff <- w/(w-wq)
-          pn <- tnClients[1:max(which(tnClients>0))]/cron
+          minprob <- which(tnClients>(.Machine$double.eps ^ 0.5))
+          if (length(minprob) > 0)
+            pn <- tnClients[1:max(minprob)]/cron
+          else
+            pn <- c(0, 0)
           if (historic)
             obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
           else
@@ -1258,33 +1231,7 @@ G_G_S_INF_H <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), 
           oldClass(obj) <-  c("G_G_S_INF_H", "SimulatedModel")
           return(obj)
     }
-if (nproc > 1) {
-  cl <- parallel::makeCluster(nproc)
-  registerDoParallel(cl, cores=nproc)
-  simulations <- NULL
-  parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-    belong <- function(obj, packagename) {
-      if (length(obj) > 1)
-        packageobj <- sapply(lapply(obj, class), attr, "package")
-      else
-        packageobj <- attr(class(obj), "package")
-      
-      return(all(packageobj==packagename))
-    }
-    res <- list()
-    for(i in 1:simulations) {
-      res <- c(res, list(G_G_S_INF_H_secuential(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic)))
-    }
-    return(res)
-  }
-  parallel::stopCluster(cl)
-  return(ifelse(length(parallelRes) == 1, parallelRes[[1]], parallelRes))
-} else {
-  res <-list()
-  for(i in 1:nsim)
-    res <- c(res, list(G_G_S_INF_H_secuential(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic)))
-  return(if (length(res)==1) res[[1]] else res)
-}
+  ParallelizeSimulations(G_G_S_INF_H_secuential, list(arrivalDistribution, serviceDistribution, s, H, staClients, nClients, historic), nsim, nproc)
 }
 
 #' Obtains the main characteristics of a G/G/S/\eqn{\infty}/H with Y replacements model by simulation
@@ -1316,8 +1263,8 @@ if (nproc > 1) {
 #' @export
 #' @family SimulatedModels
 G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), s=3, H=5, Y=3, staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+  if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
   
   G_G_S_INF_H_Y_secuential <- function(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic) {
         if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
@@ -1330,6 +1277,9 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
         
         tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
         tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+        if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+        if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+        
         possibleClients <- tArr[1:H]
         #   bussyservers <- rep(-1, s)
         bussyservers <- rep(NA, s)
@@ -1490,7 +1440,11 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
         wq <- d/nClients
         rho <- (l - lq)/s
         eff <- w/(w-wq)
-        pn <- tnClients[1:max(which(tnClients>0))]/cron
+        minprob <- which(tnClients>(.Machine$double.eps ^ 0.5))
+        if (length(minprob) > 0)
+          pn <- tnClients[1:max(minprob)]/cron
+        else
+          pn <- c(0, 0)
         if (historic)
           obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
         else
@@ -1499,33 +1453,7 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
         oldClass(obj) <-  c("G_G_S_INF_H_Y", "SimulatedModel")
         return(obj)
   }
-  if (nproc > 1) {
-    cl <- parallel::makeCluster(nproc)
-    registerDoParallel(cl, cores=nproc)
-    simulations <- NULL
-    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-      belong <- function(obj, packagename) {
-        if (length(obj) > 1)
-          packageobj <- sapply(lapply(obj, class), attr, "package")
-        else
-          packageobj <- attr(class(obj), "package")
-        
-        return(all(packageobj==packagename))
-      }
-      res <- list()
-      for(i in 1:simulations) {
-        res <- c(res, list(G_G_S_INF_H_Y_secuential(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic)))
-      }
-      return(res)
-    }
-    parallel::stopCluster(cl)
-    return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-  } else {
-    res <-list()
-    for(i in 1:nsim)
-      res <- c(res, list(G_G_S_INF_H_Y_secuential(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic)))
-    return(if (length(res)==1) res[[1]] else res)
-  }
+  ParallelizeSimulations(G_G_S_INF_H_Y_secuential, list(arrivalDistribution, serviceDistribution, s, H, Y, staClients, nClients, historic), nsim, nproc)
 }
 
 #' Obtains the main characteristics of a G/G/\eqn{\infty} model by simulation
@@ -1554,8 +1482,8 @@ G_G_S_INF_H_Y <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6)
 #' @export
 #' @family SimulatedModels
 G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staClients=100, nClients=1000, historic=FALSE, nsim=10, nproc=1) {
-  if (!is.numeric(nsim)) stop("Argument 'nsim' must be an integer greather than 0")
-  if (!is.numeric(nproc)) stop("Argument 'nproc' must be an integer greather than 0")
+  if (!is.numeric(nsim) || nsim <= 0) stop("Argument 'nsim' must be an integer greather than 0")
+  if (!is.numeric(nproc) || nproc <= 0) stop("Argument 'nproc' must be an integer greather than 0")
   
   G_G_INF_secuential <- function(arrivalDistribution, serviceDistribution, staClients, nClients, historic) {
       if (!belong(arrivalDistribution, "distr")) stop("Argument 'arrivalDistribution' must be a valid Class of the Distr package")
@@ -1565,6 +1493,9 @@ G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staC
       
       tArr <- r(arrivalDistribution) ((nClients+staClients)*2)
       tServ <- r(serviceDistribution) ((nClients+staClients)*2)
+      if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+      if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+      
       iServ <- iArr <- 1
       sysClients <- 0
       simClients <- cron <- c <- d <- 0
@@ -1669,9 +1600,13 @@ G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staC
       lq <- d/cron
       w <- c/nClients
       wq <- d/nClients
-      rho <- l - lq
+      rho <- 0
       eff <- w/(w-wq)
-      pn <- tnClients[1:max(which(tnClients>0))]/cron
+      minprob <- which(tnClients>(.Machine$double.eps ^ 0.5))
+      if (length(minprob) > 0)
+        pn <- tnClients[1:max(minprob)]/cron
+      else
+        pn <- c(0, 0)
       if (historic)
         obj$out <- list(historic=hist, l=l, lq=lq, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
       else
@@ -1680,33 +1615,7 @@ G_G_INF <- function(arrivalDistribution=Exp(3), serviceDistribution=Exp(6), staC
       
       return(obj)
   }
-  if (nproc > 1) {
-    cl <- parallel::makeCluster(nproc)
-    registerDoParallel(cl, cores=nproc)
-    simulations <- NULL
-    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks=nproc), .combine='c', .packages=c("distr", "doParallel")) %dopar% {
-      belong <- function(obj, packagename) {
-        if (length(obj) > 1)
-          packageobj <- sapply(lapply(obj, class), attr, "package")
-        else
-          packageobj <- attr(class(obj), "package")
-        
-        return(all(packageobj==packagename))
-      }
-      res <- list()
-      for(i in 1:simulations) {
-        res <- c(res, list(G_G_INF_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)))
-      }
-      return(res)
-    }
-    parallel::stopCluster(cl)
-    return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-  } else {
-    res <-list()
-    for(i in 1:nsim)
-      res <- c(res, list(G_G_INF_secuential(arrivalDistribution, serviceDistribution, staClients, nClients, historic)))
-    return(if (length(res)==1) res[[1]] else res)
-  }
+  ParallelizeSimulations(G_G_INF_secuential, list(arrivalDistribution, serviceDistribution, staClients, nClients, historic), nsim, nproc)
 }
 
 SCN_example <- function (sta, trans) {
@@ -1777,6 +1686,8 @@ ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)
       maxserv <- max(s)
       map <- function(f) {f(staClients+transitions)}
       tServ <- matrix(sapply(lapply(serviceDistribution, r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=nodes )
+      if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+      
       iServ <- rep(1, nodes)
       rand <- r(Unif()) (staClients+transitions)
       simClients <- 0
@@ -1928,7 +1839,7 @@ ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)
       lqt <- sum(lq)
       rho <- l - lq
       eff <- w/(w-wq)
-      nozero <- apply(prob, 1, function(v){any(v>0)})
+      nozero <- apply(prob, 1, function(v){any(v>(.Machine$double.eps ^ 0.5))})
       pn <- prob[1:max(which(nozero)),]/cron 
       obj$out <- list(l=l, lq=lq, lqt=lqt, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
       #obj$out$data <- array(c(l, lq, w, wq), dim= c(nodes, 4), dimnames=list(1:nodes, c("L", "Lq", "W", "Wq")))
@@ -1939,33 +1850,7 @@ ClosedNetwork <- function(serviceDistribution=c(Exp(5), Exp(5), Exp(10), Exp(15)
       
       return(obj)
   }
-  if (nproc > 1) {
-    cluster <- parallel::makeCluster(nproc)
-    registerDoParallel(cluster, cores=nproc)
-    simulations <- NULL
-    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks = nproc), .combine=c, .multicombine=TRUE, .packages="distr") %dopar% {
-      belong <- function(obj, packagename) {
-        if (length(obj) > 1)
-          packageobj <- sapply(lapply(obj, class), attr, "package")
-        else
-          packageobj <- attr(class(obj), "package")
-        
-        return(all(packageobj==packagename))
-      }
-      res <- list()
-      for(i in 1:simulations) {
-        res <- c(res, list(ClosedNetwork_secuential(serviceDistribution, s, p, staClients, nClients, transitions, historic)))
-      }
-      return(res)
-    }
-    parallel::stopCluster(cluster)
-    return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-  }
-  res <-list()
-  for(i in 1:nsim) {
-    res <- c(res, list(ClosedNetwork_secuential(serviceDistribution, s, p, staClients, nClients, transitions, historic)))
-  }
-  return(if (length(res)==1) res[[1]] else res)
+  ParallelizeSimulations(ClosedNetwork_secuential, list(serviceDistribution, s, p, staClients, nClients, transitions, historic), nsim, nproc)
 }
 
 SON_Example <- function (sta, trans) {
@@ -2046,6 +1931,9 @@ OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribu
       map <- function(f) {f((staClients+transitions)*2)}
       tServ <- matrix(sapply(lapply(serviceDistribution, r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=nodes )
       tArr <- matrix(sapply(lapply(arrivalDistribution[[1]], r), map, simplify=TRUE), nrow=((staClients+transitions)*2), ncol=length(arrivalDistribution[[2]]), dimnames=list(1:((staClients+transitions)*2), arrivalDistribution[[2]]))
+      if (any(tArr < 0)) stop("There's a problem with the Arrival Distribution, please check the parameters are correct.")
+      if (any(tServ < 0))stop("There's a problem with the Service Distribution, please check the parameters are correct.")
+      
       iServ <- rep(1, nodes)
       iArr <- rep(1, nodes)
       rand <- r(Unif()) ((staClients+transitions)*2)
@@ -2284,45 +2172,19 @@ OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribu
       w <- c/entradas_nodo
       wq <- d/entradas_nodo
       lqt <- sum(lq)
+      lt <- sum(l)
       rho <- l - lq
       eff <- w/(w-wq)
-     
-      nozero <- apply(prob, 1, function(v){any(v>0)})
+      nozero <- apply(prob, 1, function(v){any(v>(.Machine$double.eps ^ 0.5))})
       pn <- prob[1:max(which(nozero)),]/cron
-      obj$out <- list(l=l, lq=lq, lqt=lqt, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
+      obj$out <- list(l=l, lq=lq, lt=lt, lqt=lqt, w=w, wq=wq, pn=pn, rho=rho, eff=eff)
       if (historic) {
         obj$out$historic <- hist
       }
       oldClass(obj) <-  c("Open", "SimulatedNetwork", "SimulatedModel")
-      
       return(obj)
   }
-  if (nproc > 1) {
-    cluster <- parallel::makeCluster(nproc)
-    registerDoParallel(cluster, cores=nproc)
-    simulations <- NULL
-    parallelRes <- foreach(simulations=iterators::idiv(nsim, chunks = nproc), .combine=c, .multicombine=TRUE, .packages="distr") %dopar% {
-      belong <- function(obj, packagename) {
-        if (length(obj) > 1)
-          packageobj <- sapply(lapply(obj, class), attr, "package")
-        else
-          packageobj <- attr(class(obj), "package")
-        
-        return(all(packageobj==packagename))
-      }
-      res <- list()
-      for(i in 1:simulations) {
-        res <- c(res, list(OpenNetwork_secuential(arrivalDistribution, serviceDistribution, s, p, staClients, transitions, historic)))
-      }
-      return(res);
-    }
-    parallel::stopCluster(cluster)
-    return(if (length(parallelRes)==1) parallelRes[[1]] else  parallelRes)
-  }
-  res <-list()
-  for(i in 1:nsim)
-    res <- c(res, list(OpenNetwork_secuential(arrivalDistribution, serviceDistribution, s, p, staClients, transitions, historic)))
-  return(if (length(res)==1) res[[1]] else res)
+  ParallelizeSimulations(OpenNetwork_secuential, list(arrivalDistribution, serviceDistribution, s, p, staClients, transitions, historic), nsim, nproc)
 }
 
 #' @describeIn Pn Implements the method for a Simulated model
@@ -2330,6 +2192,8 @@ OpenNetwork <- function(arrivalDistribution=c(Exp(20), Exp(30)), serviceDistribu
 #' @usage NULL
 #' @export
 Pn.SimulatedModel <- function(qm, n) {
+  if (any(oldClass(qm) == "SimulatedNetwork")) stop ("Use the method Pi instead.")
+  
   ifelse(length(qm$out$pn) <= n, 0, qm$out$pn[n+1])
 }
 
@@ -2343,6 +2207,20 @@ Pi.SimulatedNetwork <- function(net, n, node) {
 }
 
 
+#' Shows basic statistical information of the variable
+#' 
+#' @param object SimulatedModel
+#' @param var Main characteristic of an queue model
+#' @param ... Further argumets
+#' @method summary SimulatedModel
+#' @details
+#' \code{summary.SimulatedModel} implements the function for an object of class SimulatedModel.
+#' @export
+summary.SimulatedModel <- function(object, var="l", ...) {
+  if (!any(var == c("l", "lq", "w", "wq", "rho", "eff"))) stop("Var must be one of the following values: 'l', 'lq', 'w', 'wq', 'rho' or 'eff'")
+  getElement(object$out, var)$summary
+}
+
 #' Print the main characteristics of a SimulatedModel object
 #' @param x SimulatedModel object
 #' @param ... Further arguments passed to or from other methods.
@@ -2350,10 +2228,12 @@ Pi.SimulatedNetwork <- function(net, n, node) {
 #' @keywords internal
 #' @export
 print.SimulatedModel <- function(x, ...) {
-  cat("Model: ", class(x)[1])
+  cat("Model: ", class(x)[1], "\n")
   if (is.list(x$out$l)) {
-    cat("\nL =\t", x$out$l$mean, "\u00B1", x$out$l$error, "\tW =\t", x$out$w$mean, "\u00B1", x$out$w$error, "\t\tIntensity =\t", x$out$rho$mean , "\u00B1", x$out$rho$error, "\n")
-    cat("Lq =\t", x$out$lq$mean, "\u00B1", x$out$lq$error, "\tWq =\t", x$out$wq$mean, "\u00B1", x$out$wq$error, "\tEfficiency =\t", x$out$eff$mean, "\u00B1", x$out$eff$error, "\n\n")
+    res <- data.frame("\u03BC" = c(x$out$l$mean, x$out$lq$mean, x$out$w$mean, x$out$wq$mean, x$out$rho$mean, x$out$eff$mean),
+               "sd" = c(x$out$l$sd, x$out$lq$sd, x$out$w$sd, x$out$wq$sd, x$out$rho$sd, x$out$eff$sd),
+                row.names = c("L", "Lq", "W", "Wq", "Intensity", "Efficiency"))
+    print(res)
   }
   else {
     cat("\nL =\t", x$out$l, "\tW =\t", x$out$w, "\t\tIntensity =\t", x$out$rho , "\n")
@@ -2369,7 +2249,12 @@ print.SimulatedModel <- function(x, ...) {
 #' @export
 print.SimulatedNetwork <- function(x, ...) {
   cat("Model: ", class(x)[1], "\n")
-  print(data.frame("L"=x$out$l, "Lq"=x$out$lq, "W"=x$out$w, "Wq"=x$out$wq))
+  if (is.list(x$out$l)) {
+    print(data.frame("L"=x$out$l[c("mean", "sd")], "Lq"=x$out$lq[c("mean", "sd")], "W"=x$out$w[c("mean", "sd")], "Wq"=x$out$wq[c("mean", "sd")]))
+  }else{
+    print(data.frame("L" = x$out$l, "Lq" = x$out$lq, "W" = x$out$w, "Wq"= x$out$wq))
+    
+  }
 }
 
 
@@ -2382,6 +2267,7 @@ print.SimulatedNetwork <- function(x, ...) {
 # #' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
 # #' @param depth Number of points printed in the plot
 # #' @param nSimulation Only used when the var param is equal to "Clients". Selects one of the multiple simulations to show the evolution of the Clients.
+
 # #' @param ... Further arguments passed to or from other methods.
 # #' @export
 # summarySimple <- function(object, minrange, maxrange, var, graphics, depth, ...) {UseMethod("summarySimple", object)}
@@ -2396,7 +2282,8 @@ plot.SimulatedModel <- function(x, minrange=1, maxrange, var="L", graphics="ggpl
   if (is.null(x$out$historic)) stop("Argument 'historic' must be TRUE to show the plots")
   if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
   truerange <- seq(minrange, maxrange, length.out=depth)
-  eval(parse(text=paste("data <- data.frame(n=x$out$historic[truerange, 'tClient'], '", var, "'=x$out$historic[truerange, '", var, "'])", sep="")))
+  #eval(parse(text=paste("data <- data.frame(n=x$out$historic[truerange, 'tClient'], '", var, "'=x$out$historic[truerange, '", var, "'])", sep="")))
+  eval(parse(text=paste("data <- data.frame(n=truerange, '", var, "'=x$out$historic[truerange, '", var, "'])", sep="")))
   switch(graphics,
         "graphics" =  {eval(parse(text=paste("plot(data$n, data$", var, ", col='red', type='l')\n
                                               abline(v=x$Staclients, untf = FALSE, col='black')\n
@@ -2439,10 +2326,12 @@ plot.SimulatedNetwork <- function(x, minrange=1, maxrange, var="L", graphics="gg
 
 #' @rdname plot
 #' @method plot list
+#' @param showMean Shows the mean of all the simulations
+#' @param showValues Shows the values of all the simulations
 #' @details
 #' \code{plot.list} implements the function for an object of class list
 #' @export
-plot.list <- function(x, minrange=1, maxrange, var="L", graphics="ggplot2", depth=maxrange-minrange+1, nSimulation=1, ...) {
+plot.list <- function(x, minrange=1, maxrange, var="L", graphics="ggplot2", depth=maxrange-minrange+1, nSimulation=1, showMean=TRUE, showValues=TRUE, ...) {
       if (length(intersect(var, c("L", "Lq", "W", "Wq", "Clients", "Intensity"))) <= 0) stop("Argument 'var' must be any of the following values: 'L', 'Lq', 'W', 'Wq', 'Clients', 'Intensity'.")
       if (!is.numeric(nSimulation)) nSimulation <- 1
       firstHistoric <- x[[1]]$out$historic
@@ -2466,16 +2355,32 @@ plot.list <- function(x, minrange=1, maxrange, var="L", graphics="ggplot2", dept
           }
           index <<- index+1
       })
+      if (showMean) {
+        if (length(dimensions) == 2) {
+          meanvalue <- sapply(x, function(foo){getElement(getElement(foo, "out"), "historic")[,var]})[seq(minrange, maxrange, length.out=depth), ]
+          meanvalue <- apply(meanvalue, 1, mean, na.rm=TRUE)
+          meanvalue <- data.frame(x = seq(minrange, maxrange, length.out=depth), val=meanvalue)
+        } else {
+          meanvalue <- data.frame(x=NULL, val=NULL, node=NULL)
+          for (i in 1:dimensions[1]) {
+            meanaux <- sapply(x, function(foo){getElement(getElement(foo, "out"), "historic")[i,var,]})[seq(minrange, maxrange, length.out=depth), ]
+            meanaux <- apply(meanaux, 1, mean, na.rm=TRUE)
+            meanvalue <- rbind(meanvalue, data.frame(x=seq(minrange, maxrange, length.out=depth), val=meanaux, node=rep(i, depth)))
+          }
+        }
+      }
       sim <- x <- val <- NULL
       switch(graphics, 
       "graphics"= {if (length(dimensions) == 2) 
                      if (var == "Clients")
                         barplot(plotdata$val[plotdata$sim==nSimulation], main = paste("Evolution of Clients in simulation ", nSimulation, sep=""), xlab="n", ylab="Number of clients")
                      else {
-                        plot(plotdata$x[plotdata$sim==1], plotdata$val[plotdata$sim==1], col=2, type='l', xlab="n", ylab=var)
+                        plot(plotdata$x[plotdata$sim==1], plotdata$val[plotdata$sim==1], col=1, type='l', xlab="n", ylab=var)
                         if (dimensions[1] > 1)
                             for(j in 2:dimensions[1])
-                              lines(plotdata$x[plotdata$sim==j], plotdata$val[plotdata$sim==j], col=2, type='l')
+                              lines(plotdata$x[plotdata$sim==j], plotdata$val[plotdata$sim==j], col=1, type='l')
+                        lines(meanvalue$x, meanvalue$val, col=2, type='l')
+                        legend('topright', legend = c("Mean value"), col = 2, cex = 0.8, pch = 1)
                      }
                    else {
                      
@@ -2484,12 +2389,28 @@ plot.list <- function(x, minrange=1, maxrange, var="L", graphics="ggplot2", dept
       "ggplot2" = {if (length(dimensions) == 2) 
                       if (var == "Clients")
                         ggplot2::ggplot(subset(plotdata, sim == nSimulation), aes(x=x, y=val, order=factor(sim))) + geom_histogram(stat="identity", na.rm=TRUE) + xlab("n") + ylab("Number of clients") + ggtitle(paste("Evolution of ", var, " in simulation ", nSimulation, sep="")) + theme(legend.position="none")
-                      else
-                        ggplot2::ggplot(plotdata, aes(x=x, y=val, order=factor(sim))) + geom_line(na.rm=TRUE) + xlab("n") + ylab(var) + ggtitle(paste("Evolution of ", var, sep="")) + theme(legend.position="none")
-                  else 
-                    ggplot2::ggplot(plotdata, aes(x=x, y=val, colour=factor(node), alpha=0.95, order=factor(sim))) + geom_line(na.rm=TRUE) + xlab("n") + ylab(var) + ggtitle(paste("Evolution of ", var, sep="")) + scale_colour_discrete(name="Nodes") + scale_alpha_continuous(name="", breaks=NULL, labels=NULL)
+                      else {
+                        plotbase <- ggplot2::ggplot()
+                        if (showValues)
+                          plotbase <- plotbase + ggplot2::geom_line(data=plotdata, aes(x=x, y=val, order=factor(sim)), na.rm=TRUE)
+                        if (showMean)
+                          plotbase <- plotbase + ggplot2::geom_line(data=meanvalue, aes(x=x, y=val, colour='red'))
+                        
+                        plotbase + ggplot2::xlab("n") + ggplot2::ylab(var) +
+                                   ggplot2::ggtitle(paste("Evolution of ", var, sep="")) +
+                                   ggplot2::scale_colour_discrete(name  =element_blank(), breaks=c("red"), labels=c("Mean value")) +
+                                   ggplot2::theme(legend.position="top")
+                      }
+                  else {
+                    plotbase <- ggplot2::ggplot()
+                    if (showValues) 
+                      plotbase <- plotbase + geom_line(data=plotdata, aes(x=x, y=val, colour=factor(node), alpha=0.95, order=factor(sim)), na.rm=TRUE) + scale_colour_discrete(name="Nodes") + scale_alpha_continuous(name="", breaks=NULL, labels=NULL)
+                    if (showMean)
+                      plotbase <- plotbase + geom_line(data=meanvalue, aes(x=x, y=val, colour=factor(node)), size=1) + scale_colour_discrete(name="Nodes")
+                    
+                    plotbase + xlab("n") + ylab(var) +
+                               ggtitle(paste("Evolution of ", var, sep="")) 
                   }
+                }
       )
 }
-
-

@@ -31,7 +31,7 @@ Obtains the main characteristics of a M/M/1 queueing model
 #an exponential distribution with mean 3 minutes.
 #The programs arrives to the workstation following
 #a Poisson process with an intensity of 15
-#programs for hour.
+#programs per hour.
 
 M_M_1(lambda=15, mu=60/3)
 }

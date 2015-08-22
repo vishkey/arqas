@@ -18,7 +18,7 @@
 #' #an exponential distribution with mean 3 minutes.
 #' #The programs arrives to the workstation following
 #' #a Poisson process with an intensity of 15
-#' #programs for hour.
+#' #programs per hour.
 #' 
 #' M_M_1(lambda=15, mu=60/3)
 #' @export
@@ -102,7 +102,7 @@ FWq.M_M_1 <- function(qm, x) {
 #' #an exponential distribution with mean 3 minutes.
 #' #The programs arrives to the workstation following
 #' #a Poisson process with an intensity of 15
-#' #programs for hour.
+#' #programs per hour.
 #' 
 #' M_M_S(lambda=15, mu=60/3, s=3)      
 #' @export
@@ -209,7 +209,7 @@ FWq.M_M_S <- function(qm, x) {
 #' #an exponential distribution with mean 3 minutes.
 #' #The programs arrive to the workstation following
 #' #a Poisson process with an intensity of 15
-#' #programs for hour.
+#' #programs per hour.
 #' #The workstation has a limited memory and only
 #' #one program is allowed to wait if the processor
 #' #is busy.
@@ -229,13 +229,14 @@ M_M_1_K <- function(lambda=3, mu=6, k=2) {
   rho <- lambda/mu
   
   if (rho != 1) {
-    l <- (rho/(1-rho)) - ((k+2)*rho^(k+2)/(1-rho^(k+2)))
+    l <- (rho/(1-rho)) - ((k+2)*rho^(k+2)/(1-rho^(k+2))) 
     barlambda <- lambda*(rho^(k+1)-1)/(rho^(k+2)-1)
   }
   else {
     l <- (k+1)/2
     barlambda <- lambda*(k+1)/(k+2)
   }
+  
   w <- l/barlambda
   wq <- w-1/mu
   lq <- barlambda*wq
@@ -348,7 +349,7 @@ FW.M_M_1_K <- function(qm, x) {
 #' #an exponential distribution with mean 3 minutes.
 #' #The programs arrive to the workstation following
 #' #a Poisson process with an intensity of 15
-#' #programs for hour.
+#' #programs per hour.
 #' #The workstation has a limited memory and only
 #' #one program is allowed to wait if the processor
 #' #is busy.
@@ -464,7 +465,6 @@ FWq.M_M_S_K <- function(qm, x) {
       A <- A*((qm$servers*mu*x)/(n-qm$servers))
       S <- S + A
       B <- B + Qn(qm, n)*S
-      print(n)
     }
   }
   return(1-B*exp(-qm$servers*mu*x)) 

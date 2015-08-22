@@ -33,12 +33,13 @@ Returns the next information of an Open Jackson network model:
 Obtains the main characteristics of an Open Jackson network model
 }
 \examples{
-#Two servers recieve 20 tasks for minute the first one,
-#and 30 tasks for minute the second one.
+#Two servers receive a number of tasks per minute;
+#20 tasks per minute in the case of the first
+#server and 30 tasks per minute in the second one.
 #The unique processsor in the first server can manage
-#100 tasks for minute, while the two processors in the
-#second server only can manage 25 task for minute.
-#When a task is near to finish in the server 2, it creates
+#100 tasks per minute, while the two processors in the
+#second server only can manage 25 task per minute.
+#When a task is close to finish in the server 2, it creates
 #a new task in the server 1 with a probability of 25\%,
 #the task ends in the other case.
 #The tasks that ends in the server 1 creates a new one

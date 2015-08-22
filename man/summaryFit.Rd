@@ -4,12 +4,18 @@
 \alias{summaryFit}
 \title{Shows three plots:The histogram and theoretical densities, the empirical and theoretical CDF's and the Q-Q plot}
 \usage{
-summaryFit(lfitdata, graphics = "ggplot2")
+summaryFit(lfitdata, graphics = "ggplot2", show = "all")
 }
 \arguments{
 \item{lfitdata}{a list of fitted data}
 
 \item{graphics}{Type of graphics: "graphics" uses the basic R plot and "ggplot2" the library ggplot2}
+
+\item{show}{Select what plots to show. Can be:
+"all",
+"dens" for the histogram,
+"cdf" for the CDF's or
+"qq" for the Q-Q-plot}
 }
 \description{
 Shows three plots:The histogram and theoretical densities, the empirical and theoretical CDF's and the Q-Q plot

@@ -39,9 +39,9 @@ Obtains the main characteristics of a M/M/1/\eqn{\infty}/H queueing model
 # The duration of the backup is also random and
 # follows an exponential distribution with mean
 # 5 minutes.
-# There are a single tape drive to perform the
-# back-up process, the station remained on hold
-# if is busy.
+# There exists a single tape drive to perform the
+# back-up process, the station will wait if it is
+# busy.
 
 M_M_1_INF_H(lambda =1/2, mu=60/5, h=5)
 }

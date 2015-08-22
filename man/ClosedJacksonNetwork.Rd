@@ -30,13 +30,15 @@ Returns the next information of a Closed Jackson Network model:
 Obtains the main characteristics of a Closed Jackson Network model
 }
 \examples{
-#An system have 4 workstations interconnected.
-#For the control of the system there is three
-#tasks in continuous execution in some of the
-#workstations. Once the task ends, this creates
-#a copy of itself and sends it tu execute in
-#some of the other three, following the next
-#probabilities table
+# A system is composed of 4 workstations
+#interconnected. The monitoring of the
+#system is carried out by three programs
+#in continuous execution in some of the
+#workstations. Once each program ends,
+#it creates a copy of itself and sends this
+#copy to be executed in any of the
+#workstations, taking into account the
+#following probabilities:
 
 # Origin-destiny     1      2     3     4
 #      1           0.25   0.15  0.20  0.40
@@ -46,10 +48,10 @@ Obtains the main characteristics of a Closed Jackson Network model
 
 #The servers 1 and 2 have two processors and
 #each of one have a process time with exponential
-#distribution and capacitiy of 5 tasks for
+#distribution and capacitiy of 5 tasks per
 #minute.
 #The servers 3 and 4 have a single processor
-#and they can serve 10 and 15 task for minute
+#and they can serve 10 and 15 task per minute
 #respectively.
 
 ClosedJacksonNetwork(mu=c(5,5,10,15),

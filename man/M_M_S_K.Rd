@@ -38,7 +38,7 @@ Obtains the main characteristics of a M/M/S/k queueing model
 #an exponential distribution with mean 3 minutes.
 #The programs arrive to the workstation following
 #a Poisson process with an intensity of 15
-#programs for hour.
+#programs per hour.
 #The workstation has a limited memory and only
 #one program is allowed to wait if the processor
 #is busy.

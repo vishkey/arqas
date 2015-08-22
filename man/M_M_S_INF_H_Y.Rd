@@ -34,13 +34,13 @@ Returns the next information of a M/M/s/\eqn{\infty}/H/Y model:
 Obtains the main characteristics of a M/M/s/\eqn{\infty}/H with Y replacements queueing model
 }
 \examples{
-#A bank has 5 ATMs. Occasionally one is damaged
-#until one of the two hired technicians fix it.
-#It is known that the mean time to repair follows
-#an exponential distribution with mean 10 minutes,
-#while the distribution of time an ATM is run
-#until it breaks down it is also exponential with
-#mean 2 hours. The bank has an ATM extra to
+#A bank has 5 ATMs. Occasionally one ot them is
+#damaged until one of the two hired technicians
+#repairs it. It is known that the mean time to repair
+#follows an exponential distribution with mean 10
+#minutes, while the distribution of time an ATM
+#is run until it breaks down it is also exponential
+#with mean 2 hours. The bank has an ATM extra to
 #replace a damaged one.
 
 M_M_S_INF_H_Y(lambda=1/2, mu=60/10, s=2, h=5, y=1)

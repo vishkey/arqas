@@ -9,7 +9,7 @@
 #' 
 #' fitData(mydata)
 #' @family DistributionAnalysis
-fitData <- function (data, ldistr= c("exp", "norm", "weibull", "unif", "lnorm", "gamma")) {
+fitData <- function (data, ldistr= c("exp", "norm", "weibull", "unif", "lnorm", "gamma", "beta")) {
   if (is.null(data)) stop("Argument 'data' must be an array of numeric values")
   options(warn=-1)
   res <-lapply(ldistr, function(x) {tryCatch(fitdist(data, x, method="mle", start=NULL),
@@ -51,7 +51,7 @@ goodnessFit <- function(lfitdata) {
       testks <- eval(parse(text=callfun))
       argschisq <- with(i, c(list(x=data, distribution = distname), estimate) )
       dataChisq <- do.call("chisq.test.cont", args = argschisq)
-      res <- rbind(res, data.frame(distrnames=i$distname, chisq=dataChisq$statistic, chisq.pvalue=format(round(dataChisq$p.value, 3), nsmall=3), ks=testks$statistic, ks.pvalue=format(round(testks$p.value, 3), nsmall=3)))
+      res <- rbind(res, data.frame(distrnames=i$distname, chisq=dataChisq$statistic, chisq.pvalue=format(round(dataChisq$p.value, 3), nsmall=3), ks=testks$statistic, ks.pvalue=format(round(testks$p.value, 3), nsmall=3), row.names=NULL))
   }
   class(res) <- c("GoodnessFit", class(res))
   return(res)
@@ -61,21 +61,44 @@ goodnessFit <- function(lfitdata) {
 #' 
 #' @param lfitdata a list of fitted data 
 #' @param graphics Type of graphics: "graphics" uses the basic R plot and "ggplot2" the library ggplot2
+#' @param show Select what plots to show. Can be:
+#'              "all",
+#'              "dens" for the histogram, 
+#'              "cdf" for the CDF's or 
+#'              "qq" for the Q-Q-plot
 #' @export
 #' @family DistributionAnalysis
-summaryFit <- function(lfitdata, graphics="ggplot2") {
+summaryFit <- function(lfitdata, graphics="ggplot2", show="all") {
   ltext <- names(lfitdata)
   if (ltext[1] == "estimate")
     ltext <- lfitdata$distname
-  layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))
+  
+  
   switch (graphics, 
-          "graphics" = {denscomp(lfitdata, legendtext=ltext)
-                        cdfcomp(lfitdata, legendtext=ltext)
-                        qqcomp(lfitdata,  legendtext=ltext)},
-          "ggplot2" = {grid.arrange(denscompggplot2(lfitdata),
-                                 cdfcompggplot2(lfitdata),
-                                 qqcompggplot2(lfitdata), ncol=2
-                       )}
+          "graphics" = {if (show == "all")
+                          layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))
+                        else
+                          layout(matrix(c(1)), 1, 1)
+                        if (any(show == c("all", "dens")))
+                            denscomp(lfitdata, legendtext=ltext)
+                        if (any(show == c("all", "cdf")))
+                            cdfcomp(lfitdata, legendtext=ltext)
+                        if (any(show == c("all", "qq")))
+                            qqcomp(lfitdata,  legendtext=ltext)},
+          "ggplot2" = { switch(show,
+                               "all" = {grid::grid.newpage()
+                                        grid::pushViewport(grid::viewport(layout = grid::grid.layout(2, 2)))
+                                        print(denscompggplot2(lfitdata),
+                                              vp = grid::viewport(layout.pos.row = 1, layout.pos.col = 1:2))
+                                        print(cdfcompggplot2(lfitdata),
+                                              vp = grid::viewport(layout.pos.row = 2, layout.pos.col = 1))
+                                        print(qqcompggplot2(lfitdata),
+                                              vp = grid::viewport(layout.pos.row = 2, layout.pos.col = 2))},
+                               "dens" = {denscompggplot2(lfitdata)},
+                               "cdf"  = {cdfcompggplot2(lfitdata)},
+                               "qq"   = {qqcompggplot2(lfitdata)})
+                            
+                      }
           )
 }
 

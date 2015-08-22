@@ -4,7 +4,8 @@
 \alias{fitData}
 \title{Computes the estimated parameters of the distributions for the input data}
 \usage{
-fitData(data, ldistr = c("exp", "norm", "weibull", "unif", "lnorm", "gamma"))
+fitData(data, ldistr = c("exp", "norm", "weibull", "unif", "lnorm", "gamma",
+  "beta"))
 }
 \arguments{
 \item{data}{data to estimate parameters}
