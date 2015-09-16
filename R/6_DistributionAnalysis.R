@@ -2,7 +2,7 @@
 #' 
 #' @param data data to estimate parameters
 #' @param ldistr A list of distributions
-#' @return A list of estimate parameters for each distribution
+#' @return A list of estimated parameters for each distribution
 #' @export
 #' @examples
 #' mydata <- rnorm(100, 10, 0.5)
@@ -104,7 +104,7 @@ summaryFit <- function(lfitdata, graphics="ggplot2", show="all") {
 
 #' Density histogram Plot using the package ggplot2
 #' 
-#' @param lfitdata a list of data fitted
+#' @param lfitdata a list of fitted data
 #' @export
 #' @family DistributionAnalysis
 denscompggplot2 <- function(lfitdata){

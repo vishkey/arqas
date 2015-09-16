@@ -60,7 +60,7 @@ FW <- function(qm, x) {UseMethod("FW", qm)}
 #'  @return \ifelse{latex}{\deqn{W_{q}(x)}}{\out{<i>W<sub>q</sub>(x)</i>}}
 #'  @rdname FWq
 #'  @examples
-#'  #Cumulative probability of waiting 1 units 
+#'  #Cumulative probability of waiting 1 unit 
 #'  #of time in the system
 #'  FWq(M_M_1(), 1)
 #'  FWq(M_M_S_K(), 1)
@@ -321,7 +321,7 @@ summaryPnQn <- function(object, n, graphics="ggplot2") {
          })
 }
 
-#' Returns the maximun value of n that satisfies the condition \ifelse{latex}{\deqn{P_{n}}}{\out{P<sub>n</sub>}} > 0
+#' Returns the maximun value of n that satisfies the condition \ifelse{latex}{\eqn{P_{n}}}{\out{P<sub>n</sub>}} > 0
 #' 
 #' @param qm object MarkovianModel
 #' @rdname maxCustomers

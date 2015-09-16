@@ -7,7 +7,7 @@
 denscompggplot2(lfitdata)
 }
 \arguments{
-\item{lfitdata}{a list of data fitted}
+\item{lfitdata}{a list of fitted data}
 }
 \description{
 Density histogram Plot using the package ggplot2

@@ -26,7 +26,7 @@
 #' # follows an exponential distribution with mean
 #' # 5 minutes.
 #' # There exists a single tape drive to perform the
-#' # back-up process, the station will wait if it is
+#' # back-up process and the station will wait if it is
 #' # busy.
 #' 
 #' M_M_1_INF_H(lambda =1/2, mu=60/5, h=5)
@@ -295,9 +295,9 @@ FW.M_M_S_INF_H <- function(qm, x) {
 #' #A bank has 5 ATMs. Occasionally one ot them is 
 #' #damaged until one of the two hired technicians
 #' #repairs it. It is known that the mean time to repair
-#' #follows an exponential distribution with mean 10
-#' #minutes, while the distribution of time an ATM
-#' #is run until it breaks down it is also exponential
+#' #each ATM follows an exponential distribution with mean
+#' #10 minutes, while the distribution of time an ATM
+#' #works is also exponential
 #' #with mean 2 hours. The bank has an ATM extra to
 #' #replace a damaged one.
 #' 
@@ -432,7 +432,7 @@ FW.M_M_S_INF_H_Y <- function(qm, x) {
 #' #rather well by a Poisson distribution with a mean of
 #' #100000/hr. 
 #' #There are five major TV stations, and a given person
-#' #choose among these essentially at random.
+#' #chooses among them essentially at random.
 #' #Surveys have also shown that the average person tunes
 #' #in for 90 min and that viewing times are approximately
 #' #exponentially distributed.

@@ -48,7 +48,7 @@ Returns the value of the cumulative distribution function of the waiting time in
 \item \code{M_M_INF}: Implements the method for a M/M/\eqn{\infty} queueing model
 }}
 \examples{
-#Cumulative probability of waiting 1 units
+#Cumulative probability of waiting 1 unit
  #of time in the system
  FWq(M_M_1(), 1)
  FWq(M_M_S_K(), 1)

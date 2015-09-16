@@ -23,10 +23,10 @@
 \item{x}{Simulated Model
 #}
 
-\item{minrange}{Number of customer needed to establish the start of the plot
+\item{minrange}{Number of customers needed to establish the start of the plot
 #}
 
-\item{maxrange}{Number of customer needed to establish the end of the plot
+\item{maxrange}{Number of customers needed to establish the end of the plot
 #}
 
 \item{var}{This variable indicates the parameter of the queue to show in graphic (L, Lq, W, Wq, Clients, Intensity)

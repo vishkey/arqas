@@ -2261,8 +2261,8 @@ print.SimulatedNetwork <- function(x, ...) {
 # #' Shows a plot of the evolution of a variable during the simulation
 # #' 
 # #' @param x Simulated Model
-# #' @param minrange Number of customer needed to establish the start of the plot
-# #' @param maxrange Number of customer needed to establish the end of the plot
+# #' @param minrange Number of customers needed to establish the start of the plot
+# #' @param maxrange Number of customers needed to establish the end of the plot
 # #' @param var This variable indicates the parameter of the queue to show in graphic (L, Lq, W, Wq, Clients, Intensity)
 # #' @param graphics Type of graphics: "graphics" use the basic R plot and "ggplot2" the library ggplot2
 # #' @param depth Number of points printed in the plot

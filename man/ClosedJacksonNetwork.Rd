@@ -47,9 +47,9 @@ Obtains the main characteristics of a Closed Jackson Network model
 #      4           0.40   0.30  0.25  0.05
 
 #The servers 1 and 2 have two processors and
-#each of one have a process time with exponential
-#distribution and capacitiy of 5 tasks per
-#minute.
+#each of one has a processing time following an
+#exponential distribution and capacity of 5
+#tasks per minute.
 #The servers 3 and 4 have a single processor
 #and they can serve 10 and 15 task per minute
 #respectively.

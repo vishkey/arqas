@@ -13,7 +13,7 @@ fitData(data, ldistr = c("exp", "norm", "weibull", "unif", "lnorm", "gamma",
 \item{ldistr}{A list of distributions}
 }
 \value{
-A list of estimate parameters for each distribution
+A list of estimated parameters for each distribution
 }
 \description{
 Computes the estimated parameters of the distributions for the input data

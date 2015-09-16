@@ -39,10 +39,10 @@ Obtains the main characteristics of an Open Jackson network model
 #The unique processsor in the first server can manage
 #100 tasks per minute, while the two processors in the
 #second server only can manage 25 task per minute.
-#When a task is close to finish in the server 2, it creates
+#When a task is finishing in the server 2, it creates
 #a new task in the server 1 with a probability of 25\%,
 #the task ends in the other case.
-#The tasks that ends in the server 1 creates a new one
+#The task that ends in the server 1 creates a new one
 #in the same server the 20\% of the times and creates
 #a new one in the server 2 the 10\% of the times, ending
 #in other case.

@@ -8,7 +8,7 @@
 \alias{maxCustomers.M_M_S_INF_H_Y}
 \alias{maxCustomers.M_M_S_K}
 \alias{maxCustomers.MarkovianModel}
-\title{Returns the maximun value of n that satisfies the condition \ifelse{latex}{\deqn{P_{n}}}{\out{P<sub>n</sub>}} > 0}
+\title{Returns the maximun value of n that satisfies the condition \ifelse{latex}{\eqn{P_{n}}}{\out{P<sub>n</sub>}} > 0}
 \usage{
 maxCustomers(qm)
 
@@ -18,7 +18,7 @@ maxCustomers(qm)
 \item{qm}{object MarkovianModel}
 }
 \description{
-Returns the maximun value of n that satisfies the condition \ifelse{latex}{\deqn{P_{n}}}{\out{P<sub>n</sub>}} > 0
+Returns the maximun value of n that satisfies the condition \ifelse{latex}{\eqn{P_{n}}}{\out{P<sub>n</sub>}} > 0
 }
 \details{
 \code{maxCustomers.M_M_S_INF_H} implements the method for a M/M/s/\eqn{\infty}/H queueing model

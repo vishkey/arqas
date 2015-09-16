@@ -31,7 +31,7 @@ Obtains the main characteristics of a M/M/\eqn{\infty} queueing model
 #rather well by a Poisson distribution with a mean of
 #100000/hr.
 #There are five major TV stations, and a given person
-#choose among these essentially at random.
+#chooses among them essentially at random.
 #Surveys have also shown that the average person tunes
 #in for 90 min and that viewing times are approximately
 #exponentially distributed.

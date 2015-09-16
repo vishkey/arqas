@@ -37,9 +37,9 @@ Obtains the main characteristics of a M/M/s/\eqn{\infty}/H with Y replacements q
 #A bank has 5 ATMs. Occasionally one ot them is
 #damaged until one of the two hired technicians
 #repairs it. It is known that the mean time to repair
-#follows an exponential distribution with mean 10
-#minutes, while the distribution of time an ATM
-#is run until it breaks down it is also exponential
+#each ATM follows an exponential distribution with mean
+#10 minutes, while the distribution of time an ATM
+#works is also exponential
 #with mean 2 hours. The bank has an ATM extra to
 #replace a damaged one.
 

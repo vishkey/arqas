@@ -29,7 +29,7 @@ Obtains the main characteristics of a M/M/1 queueing model
 #A workstation with a single processor
 #runs programs with CPU time following
 #an exponential distribution with mean 3 minutes.
-#The programs arrives to the workstation following
+#The programs arrive to the workstation following
 #a Poisson process with an intensity of 15
 #programs per hour.
 
